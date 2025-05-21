@@ -2,10 +2,10 @@ from PIL import Image
 import numpy as np
 import cv2
 from mss import mss
-from scripts.pokerstars_recognition import PokerStarsTableRecognizer
-from scripts.utils import read_config_file, set_window_size, remove_cards, data_concatenate
-from scripts.equity import calc_equity
-from scripts.info_box import update_label
+from pokerstars_recognition import PokerStarsTableRecognizer
+from utils import read_config_file, set_window_size, remove_cards, data_concatenate
+from equity import calc_equity
+from info_box import update_label
 
 sct = mss()
 config = read_config_file()
