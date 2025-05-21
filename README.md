@@ -7,6 +7,7 @@ NOTE: it only works with the theme that I have and for 6 players. It has been te
 # Installing and Running
 
 ```
+$ sudo -i
 $ git clone https://github.com/Adameelmadani/PokerVision.git
 $ cd PokerVision
 $ apt-get update
@@ -14,7 +15,11 @@ $ apt install python3-virtualenv
 $ virtualenv venv
 $ source venv/bin/activate
 $ pip3 install Cython
+$ pip3 install eval7
 $ pip3 install -r requirements.txt
+$ apt-get install python3-tk
+$ apt-get install wmctrl
+$ apt-get install xvfb
 $ cd scripts
-$ python3 grab_table.py
+$ xvfb-run -a python3 grab_table.py
 ```
