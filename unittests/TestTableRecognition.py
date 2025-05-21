@@ -1,6 +1,6 @@
 import unittest
-from scripts.pokerstars_recognition import PokerStarsTableRecognizer
-from scripts.utils import read_config_file, load_images
+from ..scripts.pokerstars_recognition import PokerStarsTableRecognizer
+from ..scripts.utils import read_config_file, load_images
 
 cfg = read_config_file('../scripts/config.yaml')
 test_cfg = read_config_file('test_config.yaml')
