@@ -1,0 +1,127 @@
+paths:
+  hero_step: 'images_for_test/hero_step/'
+  hero_cards: 'images_for_test/hero_cards/'
+  table_cards: 'images_for_test/table_cards/'
+  total_pot: 'images_for_test/total_pot/'
+  dealer_button_position: 'images_for_test/dealer_button_position/'
+  player_position: 'images_for_test/player_position/'
+  player_bet: 'images_for_test/player_bet/'
+
+hero_step:
+  test_image_1.png: True
+  test_image_2.png: False
+  test_image_3.png: True
+  test_image_4.png: False
+  test_image_5.png: False
+  test_image_6.png: False
+  test_image_7.png: False
+  test_image_8.png: True
+  test_image_9.png: True
+  test_image_10.png: False
+  test_image_11.png: False
+  test_image_12.png: True
+  test_image_13.png: True
+  test_image_14.png: False
+  test_image_15.png: False
+  test_image_16.png: False
+  test_image_17.png: True
+  test_image_18.png: False
+  test_image_19.png: True
+
+hero_cards:
+  test_image_1.png: ['Qs', 'As']
+  test_image_2.png: []
+  test_image_3.png: ['7c','Kh']
+  test_image_4.png: []
+  test_image_5.png: ['2h','Ks']
+  test_image_6.png: ['2h','Ks']
+  test_image_7.png: ['Ah', '4h']
+  test_image_8.png: ['Ah', '4h']
+  test_image_9.png: ['2d', '6s']
+  test_image_10.png: ['Qd', '3s']
+  test_image_11.png: ['Kc', 'Ad']
+  test_image_12.png: ['As', 'Td']
+  test_image_13.png: ['5s', '9c']
+  test_image_14.png: ['Kd', 'Kh']
+  test_image_15.png: ['Ad', 'Td']
+  test_image_16.png: ['2d', 'Tc']
+
+table_cards:
+  test_image_1.png: ['9h','5d','6d','9c']
+  test_image_2.png: ['6c','4s','Ts','2s','8s']
+  test_image_3.png: ['7h','4c','5h','Ac','Td']
+  test_image_4.png: ['2d','3s','7h','Qh','Ah']
+  test_image_5.png: ['Qc','Kd','2s']
+  test_image_6.png: ['Th','Jc','Qc']
+  test_image_7.png: ['Th','Jc','Qc','Jh']
+  test_image_8.png: ['2s','Qh','Qs']
+  test_image_9.png: ['2s','Qh','Qs', 'Ah']
+  test_image_11.png: ['2s','Qh','Qs', 'Ah','Ac']
+  test_image_12.png: ['Tc','9h','8d']
+  test_image_13.png: ['5c','Qs','3d','2s']
+  test_image_14.png: ['5c','Qs','3d','2s', 'Ah']
+  test_image_15.png: ['Ad','Tc','4s','7h','3h']
+  test_image_16.png: ['4c','7d','9d']
+  test_image_17.png: ['9s','6c','7s','Jh']
+  test_image_18.png: ['6d','Tc','5s']
+  test_image_19.png: []
+  test_image_20.png: ['3h','Qc','7c']
+
+total_pot:
+  test_image_1.png: '1,550'
+  test_image_2.png: '150'
+  test_image_3.png: '2,268'
+  test_image_4.png: '250'
+  test_image_5.png: '861'
+  test_image_7.png: '3,496'
+  test_image_8.png: '17,450'
+  test_image_9.png: '350'
+  test_image_10.png: '2,354'
+  test_image_11.png: '400'
+  test_image_12.png: '750'
+  test_image_13.png: '550'
+  test_image_14.png: '38,169'
+  test_image_15.png: '283'
+  test_image_16.png: '478'
+
+dealer_button_position:
+  test_image_1.png: {1: '', 2: 'dealer_button', 3: '', 4: '', 5: '', 6: ''}
+  test_image_2.png: {1: '', 2: '', 3: 'dealer_button', 4: '', 5: '', 6: ''}
+  test_image_3.png: {1: '', 2: '', 3: '', 4: 'dealer_button', 5: '', 6: ''}
+  test_image_4.png: {1: '', 2: '', 3: '', 4: '', 5: '', 6: 'dealer_button'}
+  test_image_5.png: {1: '', 2: '', 3: '', 4: 'dealer_button', 5: '', 6: ''}
+  test_image_6.png: {1: 'dealer_button', 2: '', 3: '', 4: '', 5: '', 6: ''}
+  test_image_7.png: {1: 'dealer_button', 2: '', 3: '', 4: '', 5: '', 6: ''}
+  test_image_8.png: {1: '', 2: '', 3: '', 4: '', 5: 'dealer_button', 6: ''}
+  test_image_9.png: {1: '', 2: '', 3: 'dealer_button', 4: '', 5: '', 6: ''}
+  test_image_10.png: {1: '', 2: '', 3: '', 4: '', 5: '', 6: 'dealer_button'}
+  test_image_11.png: {1: '', 2: '', 3: '', 4: 'dealer_button', 5: '', 6: ''}
+
+player_position:
+  test_image_1.png: {1: 'CO', 2: 'BTN', 3: 'SB', 4: 'BB', 5: '-so-', 6: 'MP'}
+  test_image_2.png: {1: 'MP', 2: 'CO', 3: 'BTN', 4: 'SB', 5: '-so-', 6: 'BB'}
+  test_image_3.png: {1: 'BB', 2: '-so-', 3: 'CO', 4: 'BTN', 5: '-so-', 6: 'SB'}
+  test_image_4.png: {1: 'SB', 2: 'BB', 3: 'MP', 4: 'CO', 5: '-so-', 6: 'BTN'}
+  test_image_5.png: {1: 'BB', 2: 'CO', 3: '-so-', 4: '-so-', 5: 'BTN', 6: 'SB'}
+  test_image_6.png: {1: 'BB', 2: 'MP', 3: 'CO', 4: 'BTN', 5: '-so-', 6: 'SB'}
+  test_image_7.png: {1: 'BB', 2: '-so-', 3: '-so-', 4: '-', 5: '-', 6: 'SB'}
+  test_image_8.png: {1: 'BB', 2: '-', 3: 'CO', 4: 'BTN', 5: '-', 6: 'SB'}
+  test_image_9.png: {1: 'BTN', 2: 'SB', 3: 'BB', 4: 'UTG', 5: 'MP', 6: 'CO'}
+  test_image_10.png: {1: 'BB', 2: '-', 3: 'CO', 4: 'BTN', 5: '-', 6: 'SB'}
+
+player_bet:
+  test_image_1.png: {'Hero': 'CO', 'BTN': '', 'SB': '700', 'BB': '', 5: '-so-', 'MP': ''}
+  test_image_2.png: {'Hero': 'SB', BB: '8,000', MP: '', CO: '', 5: '-so-', BTN: ''}
+  test_image_3.png: {'Hero': 'BB', 2: '-so-', CO: '', BTN: '', 5: '-so-', SB: '50'}
+  test_image_4.png: {'Hero': 'CO', BTN: '1,748', SB: '1,748', BB: '', 5: '-so-', MP: ''}
+  test_image_5.png: {'Hero': 'SB', 2: '-', 'BB': '100', 'CO': '', 5: '-', BTN: '100'}
+  test_image_6.png: {'Hero': 'BTN', 'SB': '50', 'BB': '100', 'MP': '100', 5: '-so-', CO: '100'}
+  test_image_7.png: {'Hero': 'SB', 'BB': '', 3: '-so-', 4: '-so-', 'CO': '', 'BTN': ''}
+  test_image_8.png: {'Hero': 'BB', 2: '-', 'CO': '', 'BTN': '100', 5: '-', 'SB': ''}
+  test_image_9.png: {'Hero': 'BTN', 'SB': '', 'BB': '50', 'UTG': '100', 'MP': '200', 'CO': '200'}
+  test_image_10.png: {'Hero': 'BB', 'CO': '2,362', 3: '-', 4: '-', 'BTN': '', 'SB': ''}
+
+
+
+
+
