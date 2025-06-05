@@ -23,3 +23,14 @@ Create two separate folders for training data:
 
 2. `/data/cards_suits/` - Contains images of card suits (Clubs, Diamonds, Hearts, Spades)
    - Use PNG format with filenames like: Clubs.png, Hearts.png, etc.
+
+## Create Env
+
+1. Install virtualenv
+pip install virtualenv
+
+2. Create a virtualenv environment
+virtualenv -p python2 env
+
+3. Activate the virtualenv
+env\Scripts\activate.bat
