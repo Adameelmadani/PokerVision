@@ -2,22 +2,24 @@ import time
 import threading
 import pygame
 import os
+import numpy as np
 from screenshot import take_screenshot
 from card_detector import detect_cards
-from card_recognizer import recognize_cards
+from card_recognizer import recognize_cards, preprocess_card_image, predict_card_with_models, simple_card_recognition, rank_model_loaded, suit_model_loaded
 
 class PokerCV:
     def __init__(self):
         self.running = False
-        self.detected_cards = []
+        self.player_cards = []
+        self.table_cards = []
         
         # Initialize pygame for the interface
         pygame.init()
-        self.screen = pygame.display.set_mode((300, 400))
+        self.screen = pygame.display.set_mode((300, 500))
         pygame.display.set_caption("PokerCV - Poker Card Recognition")
         self.font = pygame.font.SysFont("Arial", 16)
         self.clock = pygame.time.Clock()
-        self.bg_color = (0, 0, 0);
+        self.bg_color = (0, 100, 0)  # Poker table green
         
     def start_detection(self):
         """Start the card detection thread"""
@@ -26,29 +28,78 @@ class PokerCV:
         self.detection_thread.daemon = True
         self.detection_thread.start()
         
+    def process_card_regions(self, screenshot_rank, screenshot_suit):
+        """Process a card's rank and suit screenshots to identify the card"""
+        # Preprocess images
+        preprocessed_rank = preprocess_card_image(screenshot_rank)
+        preprocessed_suit = preprocess_card_image(screenshot_suit)
+        
+        # Get card rank and suit
+        if rank_model_loaded and suit_model_loaded:
+            # Use rank model for rank image and suit model for suit image
+            rank = predict_card_with_models(preprocessed_rank)[0]  # Get only rank
+            suit = predict_card_with_models(preprocessed_suit)[1]  # Get only suit
+        else:
+            # Fallback using simple recognition
+            rank, _ = simple_card_recognition(screenshot_rank)
+            _, suit = simple_card_recognition(screenshot_suit)
+            
+        return {"rank": rank, "suit": suit}
+        
     def _detection_loop(self):
         """Main loop for card detection"""
         # Create screenshots directory if it doesn't exist
         screenshots_dir = os.path.join(os.path.dirname(__file__), "screenshots")
         os.makedirs(screenshots_dir, exist_ok=True)
         
-        # Define your region of interest (left, top, width, height)
-        # Adjust these values to match your poker table region
-        roi = (621, 463, 17, 23)  # Example values
+        # Define card regions (rank and suit for each card)
+        player_card_regions = [
+            {"rank": (621, 463, 17, 23), "suit": (622, 487, 14, 17)},  # Player Card 1
+            {"rank": (686, 463, 17, 23), "suit": (687, 487, 14, 17)}   # Player Card 2
+        ]
+        
+        table_card_regions = [
+            {"rank": (516, 257, 17, 21), "suit": (517, 280, 14, 17)},  # Table Card 1
+            {"rank": (585, 257, 17, 21), "suit": (586, 280, 14, 17)},  # Table Card 2
+            {"rank": (653, 257, 17, 21), "suit": (654, 280, 14, 17)},  # Table Card 3
+            {"rank": (722, 257, 17, 21), "suit": (723, 280, 14, 17)},  # Table Card 4
+            {"rank": (791, 257, 17, 21), "suit": (792, 280, 14, 17)}   # Table Card 5
+        ]
         
         while self.running:
-            # Generate a unique filename with timestamp
             timestamp = time.strftime("%Y%m%d-%H%M%S")
-            save_path = os.path.join(screenshots_dir, f"poker_capture_{timestamp}.png")
             
-            # Take a screenshot of the specified region and save it
-            screenshot = take_screenshot(region=roi, save_path=save_path)
+            # Process player cards
+            player_cards = []
+            for i, regions in enumerate(player_card_regions):
+                # Take screenshots of rank and suit regions
+                rank_path = os.path.join(screenshots_dir, f"player{i+1}_rank_{timestamp}.png")
+                suit_path = os.path.join(screenshots_dir, f"player{i+1}_suit_{timestamp}.png")
+                
+                screenshot_rank = take_screenshot(region=regions["rank"], save_path=rank_path)
+                screenshot_suit = take_screenshot(region=regions["suit"], save_path=suit_path)
+                
+                # Process the card
+                card = self.process_card_regions(screenshot_rank, screenshot_suit)
+                player_cards.append(card)
             
-            # Detect card regions in the screenshot
-            card_regions = detect_cards(screenshot)
+            # Process table cards
+            table_cards = []
+            for i, regions in enumerate(table_card_regions):
+                # Take screenshots of rank and suit regions
+                rank_path = os.path.join(screenshots_dir, f"table{i+1}_rank_{timestamp}.png")
+                suit_path = os.path.join(screenshots_dir, f"table{i+1}_suit_{timestamp}.png")
+                
+                screenshot_rank = take_screenshot(region=regions["rank"], save_path=rank_path)
+                screenshot_suit = take_screenshot(region=regions["suit"], save_path=suit_path)
+                
+                # Process the card
+                card = self.process_card_regions(screenshot_rank, screenshot_suit)
+                table_cards.append(card)
             
-            # Recognize each card
-            self.detected_cards = recognize_cards(screenshot, card_regions)
+            # Update the card lists
+            self.player_cards = player_cards
+            self.table_cards = table_cards
             
             # Sleep to avoid high CPU usage
             time.sleep(2)
@@ -64,20 +115,34 @@ class PokerCV:
                     running = False
             
             # Clear the screen
-            self.screen.fill(self.bg_color)  # Poker table color
+            self.screen.fill(self.bg_color)
             
-            # Display the detected cards
+            # Display player cards
             y_position = 20
-            self.screen.blit(self.font.render("Detected Cards:", True, (255, 255, 255)), (20, y_position))
-            y_position += 20
+            self.screen.blit(self.font.render("Player Cards:", True, (255, 255, 255)), (20, y_position))
+            y_position += 30
             
-            if not self.detected_cards:
-                self.screen.blit(self.font.render("No cards detected", True, (255, 255, 255)), (20, y_position))
+            if not self.player_cards:
+                self.screen.blit(self.font.render("No player cards detected", True, (255, 255, 255)), (20, y_position))
+                y_position += 25
             else:
-                for i, card in enumerate(self.detected_cards):
+                for i, card in enumerate(self.player_cards):
                     card_text = f"Card {i+1}: {card['rank']} of {card['suit']}"
                     self.screen.blit(self.font.render(card_text, True, (255, 255, 255)), (20, y_position))
-                    y_position += 20
+                    y_position += 25
+            
+            # Display table cards
+            y_position += 20
+            self.screen.blit(self.font.render("Table Cards:", True, (255, 255, 255)), (20, y_position))
+            y_position += 30
+            
+            if not self.table_cards:
+                self.screen.blit(self.font.render("No table cards detected", True, (255, 255, 255)), (20, y_position))
+            else:
+                for i, card in enumerate(self.table_cards):
+                    card_text = f"Card {i+1}: {card['rank']} of {card['suit']}"
+                    self.screen.blit(self.font.render(card_text, True, (255, 255, 255)), (20, y_position))
+                    y_position += 25
             
             # Update the display
             pygame.display.flip()
