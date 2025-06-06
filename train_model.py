@@ -189,8 +189,8 @@ def train():
     rank_model = create_rank_model()
     rank_model.fit(
         X_rank_train, y_rank_train,
-        epochs=500,
-        batch_size=4,
+        epochs=300,
+        batch_size=8,
         validation_data=(X_rank_test, y_rank_test)
     )
     
@@ -199,8 +199,8 @@ def train():
     suit_model = create_suit_model()
     suit_model.fit(
         X_suit_train, y_suit_train,
-        epochs=500,
-        batch_size=4,
+        epochs=300,
+        batch_size=8,
         validation_data=(X_suit_test, y_suit_test)
     )
     

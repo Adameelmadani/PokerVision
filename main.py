@@ -28,9 +28,21 @@ class PokerCV:
         
     def _detection_loop(self):
         """Main loop for card detection"""
+        # Create screenshots directory if it doesn't exist
+        screenshots_dir = os.path.join(os.path.dirname(__file__), "screenshots")
+        os.makedirs(screenshots_dir, exist_ok=True)
+        
+        # Define your region of interest (left, top, width, height)
+        # Adjust these values to match your poker table region
+        roi = (621, 463, 17, 23)  # Example values
+        
         while self.running:
-            # Take a screenshot
-            screenshot = take_screenshot()
+            # Generate a unique filename with timestamp
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            save_path = os.path.join(screenshots_dir, f"poker_capture_{timestamp}.png")
+            
+            # Take a screenshot of the specified region and save it
+            screenshot = take_screenshot(region=roi, save_path=save_path)
             
             # Detect card regions in the screenshot
             card_regions = detect_cards(screenshot)
@@ -39,8 +51,8 @@ class PokerCV:
             self.detected_cards = recognize_cards(screenshot, card_regions)
             
             # Sleep to avoid high CPU usage
-            time.sleep(0.5)
-            
+            time.sleep(2)
+        
     def run_interface(self):
         """Run the main interface loop"""
         self.start_detection()

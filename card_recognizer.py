@@ -132,3 +132,31 @@ def extract_card_image(image, region):
         'card': card_img,
         'rank_suit': rank_img
     }
+
+def recognize_card_template_matching(card_image, templates):
+    """
+    Template matching approach for extremely consistent card images
+    
+    Args:
+        card_image (numpy.ndarray): Input card image
+        templates (dict): Dictionary of name:template_image pairs
+    
+    Returns:
+        str: Name of the best matching template
+    """
+    best_match = None
+    best_score = float('-inf')
+    
+    for name, template in templates.items():
+        # Resize template to match card image size if needed
+        template_resized = cv2.resize(template, (card_image.shape[1], card_image.shape[0]))
+        
+        # Match template (multiple methods available)
+        result = cv2.matchTemplate(card_image, template_resized, cv2.TM_CCOEFF_NORMED)
+        _, score, _, _ = cv2.minMaxLoc(result)
+        
+        if score > best_score:
+            best_score = score
+            best_match = name
+    
+    return best_match
