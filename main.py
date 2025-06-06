@@ -13,10 +13,11 @@ class PokerCV:
         
         # Initialize pygame for the interface
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
+        self.screen = pygame.display.set_mode((300, 400))
         pygame.display.set_caption("PokerCV - Poker Card Recognition")
-        self.font = pygame.font.SysFont("Arial", 24)
+        self.font = pygame.font.SysFont("Arial", 16)
         self.clock = pygame.time.Clock()
+        self.bg_color = (0, 0, 0);
         
     def start_detection(self):
         """Start the card detection thread"""
@@ -51,12 +52,12 @@ class PokerCV:
                     running = False
             
             # Clear the screen
-            self.screen.fill((0, 100, 0))  # Poker table green
+            self.screen.fill(self.bg_color)  # Poker table color
             
             # Display the detected cards
-            y_position = 50
+            y_position = 20
             self.screen.blit(self.font.render("Detected Cards:", True, (255, 255, 255)), (20, y_position))
-            y_position += 40
+            y_position += 20
             
             if not self.detected_cards:
                 self.screen.blit(self.font.render("No cards detected", True, (255, 255, 255)), (20, y_position))
@@ -64,7 +65,7 @@ class PokerCV:
                 for i, card in enumerate(self.detected_cards):
                     card_text = f"Card {i+1}: {card['rank']} of {card['suit']}"
                     self.screen.blit(self.font.render(card_text, True, (255, 255, 255)), (20, y_position))
-                    y_position += 30
+                    y_position += 20
             
             # Update the display
             pygame.display.flip()
