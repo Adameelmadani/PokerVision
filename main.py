@@ -78,10 +78,6 @@ class PokerCV:
         
     def _detection_loop(self):
         """Main loop for card detection"""
-        # Create screenshots directory if it doesn't exist
-        screenshots_dir = os.path.join(os.path.dirname(__file__), "screenshots")
-        os.makedirs(screenshots_dir, exist_ok=True)
-        
         # Define card regions (rank and suit for each card)
         player_card_regions = [
             {"rank": (621, 463, 17, 23), "suit": (622, 487, 14, 17)},  # Player Card 1
@@ -103,11 +99,8 @@ class PokerCV:
             player_cards = []
             for i, regions in enumerate(player_card_regions):
                 # Take screenshots of rank and suit regions
-                rank_path = os.path.join(screenshots_dir, f"player{i+1}_rank_{timestamp}.png")
-                suit_path = os.path.join(screenshots_dir, f"player{i+1}_suit_{timestamp}.png")
-                
-                screenshot_rank = take_screenshot(region=regions["rank"], save_path=rank_path)
-                screenshot_suit = take_screenshot(region=regions["suit"], save_path=suit_path)
+                screenshot_rank = take_screenshot(region=regions["rank"])
+                screenshot_suit = take_screenshot(region=regions["suit"])
                 
                 # Process the card
                 card = self.process_card_regions(screenshot_rank, screenshot_suit, i)
@@ -119,11 +112,8 @@ class PokerCV:
             
             for i, regions in enumerate(table_card_regions):
                 # Take screenshots of rank and suit regions
-                rank_path = os.path.join(screenshots_dir, f"table{i+1}_rank_{timestamp}.png")
-                suit_path = os.path.join(screenshots_dir, f"table{i+1}_suit_{timestamp}.png")
-                
-                screenshot_rank = take_screenshot(region=regions["rank"], save_path=rank_path)
-                screenshot_suit = take_screenshot(region=regions["suit"], save_path=suit_path)
+                screenshot_rank = take_screenshot(region=regions["rank"])
+                screenshot_suit = take_screenshot(region=regions["suit"])
                 
                 # Process the card
                 card = self.process_card_regions(screenshot_rank, screenshot_suit, i)

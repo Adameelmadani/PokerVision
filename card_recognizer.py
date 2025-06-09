@@ -95,6 +95,10 @@ def predict_card_with_models(preprocessed_image):
     rank_idx = np.argmax(rank_prediction[0])
     suit_idx = np.argmax(suit_prediction[0])
     
+    # Ensure indices are within valid range
+    rank_idx = min(rank_idx, len(RANKS) - 1)  # Clip to valid index
+    suit_idx = min(suit_idx, len(SUITS) - 1)  # Clip to valid index
+    
     return RANKS[rank_idx], SUITS[suit_idx]
 
 def simple_card_recognition(image):
