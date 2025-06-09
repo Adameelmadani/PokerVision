@@ -7,6 +7,7 @@ import cv2
 from screenshot import take_screenshot
 from card_detector import detect_cards
 from card_recognizer import recognize_cards, preprocess_card_image, predict_card_with_models, simple_card_recognition, rank_model_loaded, suit_model_loaded, empty_model_loaded, predict_empty_position
+from poker_evaluator import get_hand_analysis
 
 # Game states
 GAME_STATES = {
@@ -22,6 +23,7 @@ class PokerCV:
         self.player_cards = []
         self.table_cards = []
         self.game_state = "Pre-flop"
+        self.hand_analysis = None
         # Not loading empty images directly, will use model predictions
         
         # Initialize pygame for the interface
@@ -130,6 +132,12 @@ class PokerCV:
             self.player_cards = player_cards
             self.table_cards = table_cards
             
+            # Calculate hand analysis if we have player cards
+            if any(not card.get('empty', False) for card in player_cards):
+                self.hand_analysis = get_hand_analysis(player_cards, table_cards)
+            else:
+                self.hand_analysis = None
+            
             # Sleep to avoid high CPU usage
             time.sleep(2)
         
@@ -181,6 +189,18 @@ class PokerCV:
                         card_text = f"Card {i+1}: {card['rank']} of {card['suit']}"
                     self.screen.blit(self.font.render(card_text, True, (255, 255, 255)), (20, y_position))
                     y_position += 25
+            
+            # Display hand analysis
+            y_position += 40
+            self.screen.blit(self.font.render("Hand Analysis:", True, (255, 255, 255)), (20, y_position))
+            y_position += 30
+            
+            if self.hand_analysis:
+                self.screen.blit(self.font.render(f"Hand: {self.hand_analysis['hand_name']}", True, (255, 255, 255)), (20, y_position))
+                y_position += 25
+                self.screen.blit(self.font.render(f"Win Probability: {self.hand_analysis['win_probability']:.2f}%", True, (255, 255, 255)), (20, y_position))
+            else:
+                self.screen.blit(self.font.render("No valid hand detected", True, (255, 255, 255)), (20, y_position))
             
             # Update the display
             pygame.display.flip()
