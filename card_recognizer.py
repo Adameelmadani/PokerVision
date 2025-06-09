@@ -11,6 +11,7 @@ SUITS = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
 models_dir = os.path.join(os.path.dirname(__file__), "models")
 rank_model_path = os.path.join(models_dir, "rank_model.h5")
 suit_model_path = os.path.join(models_dir, "suit_model.h5")
+empty_model_path = os.path.join(models_dir, "empty_model.h5")
 
 # Try to load rank model
 try:
@@ -27,6 +28,14 @@ try:
 except (ImportError, FileNotFoundError):
     suit_model_loaded = False
     print(f"Suit model not found at {suit_model_path}. Using placeholder predictions.")
+
+# Try to load empty position model
+try:
+    empty_model = tf.keras.models.load_model(empty_model_path)
+    empty_model_loaded = True
+except (ImportError, FileNotFoundError):
+    empty_model_loaded = False
+    print(f"Empty position model not found at {empty_model_path}. Using fallback methods.")
 
 def recognize_cards(image, card_regions):
     """
@@ -160,3 +169,19 @@ def recognize_card_template_matching(card_image, templates):
             best_match = name
     
     return best_match
+
+def predict_empty_position(preprocessed_image):
+    """Predict if a position is empty using the trained model"""
+    if not empty_model_loaded:
+        return False  # Default to not empty if model isn't loaded
+    
+    # Add batch dimension
+    img = np.expand_dims(preprocessed_image, axis=0)
+    
+    # Get prediction from empty model
+    prediction = empty_model.predict(img, verbose=0)
+    
+    # Get the highest probability class
+    is_empty = np.argmax(prediction[0]) == 0
+    
+    return is_empty
