@@ -1,117 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PokerVision Documentation</title>
-    <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PokerVision Docs</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <div class="documentation">
-        <!-- Sidebar Navigation -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>PokerVision</h2>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="#overview">Overview</a></li>
-                    <li><a href="#installation">Installation</a></li>
-                    <li><a href="#usage">Usage</a></li>
-                    <li>
-                        <a href="#components">Components</a>
-                        <ul>
-                            <li><a href="#table-recognition">Table Recognition</a></li>
-                            <li><a href="#equity-calculation">Equity Calculation</a></li>
-                            <li><a href="#player-info">Player Information</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="#api">API Reference</a>
-                        <ul>
-                            <li><a href="#equity-api">Equity Module</a></li>
-                            <li><a href="#recognition-api">Recognition Module</a></li>
-                            <li><a href="#utils-api">Utilities</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#configuration">Configuration</a></li>
-                </ul>
-            </nav>
-        </div>
+  <div class="container">
+    <h1>PokerVision</h1>
+    <p>A computer vision system for recognizing poker cards from screen captures using machine learning, specifically designed for PokerStars Texas Hold'em 6-player tables.</p>
 
-        <!-- Main Content -->
-        <div class="content">
-            <section id="overview">
-                <h1>PokerVision Documentation</h1>
-                <p>
-                    PokerVision is a tool for recognition of all entities on the poker table (currently only for PokerStars), with analytics to help you make strategic decisions about your moves.
-                </p>
-                <div class="note">
-                    <p><strong>NOTE:</strong> This tool only works with the specific theme included and for 6-player tables. It has been tested on Ubuntu with Python 3.8.</p>
-                </div>
-            </section>
+    <section>
+      <h2>Overview</h2>
+      <p>PokerVision uses computer vision and machine learning techniques to recognize poker cards directly from screen captures. The system can identify card ranks and suits in real-time, track table cards, analyze hand strength, and estimate win probability. It is optimized for PokerStars Texas Hold'em 6-player tables.</p>
+    </section>
 
-            <section id="installation">
-                <h2>Installation</h2>
-                <p>Follow these steps to install and run PokerVision:</p>
-                <div class="code-block">
-                    <pre><code>git clone https://github.com/yourusername/pokervision.git
-cd pokervision
-pip install -r requirements.txt</code></pre>
-                </div>
-            </section>
+    <section>
+      <h2>Features</h2>
+      <ul>
+        <li>Screen capture functionality to grab card regions</li>
+        <li>Card detection using computer vision</li>
+        <li>Card rank and suit recognition using trained neural networks</li>
+        <li>Empty position detection to track game progress</li>
+        <li>Real-time display interface built with Pygame</li>
+        <li>Support for Texas Hold'em cards (2-9, 10, J, Q, K, A)</li>
+        <li>Hand evaluation and win probability calculation</li>
+        <li>Game state tracking (Pre-flop, Flop, Turn, River)</li>
+        <li>Optimized for PokerStars UI and 6-player table layout</li>
+      </ul>
+    </section>
 
-            <section id="usage">
-                <h2>Usage</h2>
-                <p>Run the main script to start table recognition and analytics:</p>
-                <div class="code-block">
-                    <pre><code>python main.py</code></pre>
-                </div>
-            </section>
+    <section>
+      <h2>Prerequisites</h2>
+      <ul>
+        <li>Python 3.7+</li>
+        <li>OpenCV</li>
+        <li>TensorFlow 2.x</li>
+        <li>Pygame</li>
+        <li>NumPy</li>
+        <li>scikit-learn</li>
+        <li>Matplotlib</li>
+        <li>Seaborn</li>
+        <li>PokerStars desktop client</li>
+      </ul>
+    </section>
 
-            <section id="components">
-                <h2>Components</h2>
+    <section>
+      <h2>Installation</h2>
+      <ol>
+        <li>Clone the repository:
+          <pre><code>git clone https://github.com/Adameelmadani/PokerVision.git
+cd PokerVision</code></pre>
+        </li>
+        <li>Install virtual environment:
+          <pre><code>pip install virtualenv</code></pre>
+        </li>
+        <li>Create a virtual environment:
+          <pre><code>virtualenv -p python env</code></pre>
+        </li>
+        <li>Activate the virtual environment:
+          <pre><code>env\Scripts\activate.bat</code></pre>
+        </li>
+        <li>Install dependencies:
+          <pre><code>pip install -r requirements.txt</code></pre>
+        </li>
+      </ol>
+    </section>
 
-                <h3 id="table-recognition">Table Recognition</h3>
-                <p>Identifies cards, players, and chips using OpenCV and template matching on PokerStars tables.</p>
+    <section>
+      <h2>Dataset Structure</h2>
+      <ul>
+        <li><code>/data/cards_numbers/</code> - Card ranks like <code>r_2.png</code>, <code>b_10.png</code></li>
+        <li><code>/data/cards_suits/</code> - Card suits like <code>Clubs_1.png</code>, <code>Diamonds_2.png</code></li>
+        <li><code>/data/empty_positions/</code> - Empty card position images like <code>rank_pos1.png</code></li>
+      </ul>
+    </section>
 
-                <h3 id="equity-calculation">Equity Calculation</h3>
-                <p>Calculates your win probability based on your cards and the table state using <code>pypokerengine</code>.</p>
+    <section>
+      <h2>Training the Models</h2>
+      <pre><code>python train_model.py</code></pre>
+      <pre><code>python test_models.py</code></pre>
+    </section>
 
-                <h3 id="player-info">Player Information</h3>
-                <p>Extracts and tracks opponents’ betting behavior and stack sizes throughout the session.</p>
-            </section>
+    <section>
+      <h2>Usage</h2>
+      <ol>
+        <li>Launch PokerStars and join a 6-player table.</li>
+        <li>Run:
+          <pre><code>python main.py</code></pre>
+        </li>
+        <li>The app will detect cards and track the game in real-time.</li>
+        <li>Edit <code>main.py</code> for screen region adjustments.</li>
+      </ol>
+    </section>
 
-            <section id="api">
-                <h2>API Reference</h2>
+    <section>
+      <h2>Project Structure</h2>
+      <ul>
+        <li><code>main.py</code> - Main app with Pygame interface</li>
+        <li><code>screenshot.py</code> - Screen capture tools</li>
+        <li><code>card_detector.py</code> - Card detection logic</li>
+        <li><code>card_recognizer.py</code> - Model-based recognition</li>
+        <li><code>train_model.py</code> - Model training scripts</li>
+        <li><code>test_models.py</code> - Evaluation scripts</li>
+        <li><code>poker_evaluator.py</code> - Hand evaluation logic</li>
+        <li><code>/data/</code> - Training/test images</li>
+        <li><code>/models/</code> - Trained models</li>
+        <li><code>/evaluation/</code> - Metrics & visualizations</li>
+      </ul>
+    </section>
 
-                <h3 id="equity-api">Equity Module</h3>
-                <p>Provides functions to calculate the equity of hands. Main functions include:</p>
-                <ul>
-                    <li><code>calculate_equity(hand, board)</code></li>
-                    <li><code>simulate_outcomes()</code></li>
-                </ul>
+    <section>
+      <h2>Configuration</h2>
+      <ul>
+        <li>Edit coordinates in <code>main.py</code> for your resolution</li>
+        <li>Default optimized for 6-player tables</li>
+        <li>Use screenshots from your PokerStars theme</li>
+        <li>Train models with your images</li>
+        <li>Fine-tune detection as needed</li>
+      </ul>
+    </section>
 
-                <h3 id="recognition-api">Recognition Module</h3>
-                <p>Handles image capture and element detection from the PokerStars interface. Example functions:</p>
-                <ul>
-                    <li><code>detect_cards()</code></li>
-                    <li><code>detect_players()</code></li>
-                </ul>
-
-                <h3 id="utils-api">Utilities</h3>
-                <p>Helper functions for data manipulation and formatting:</p>
-                <ul>
-                    <li><code>format_chips(amount)</code></li>
-                    <li><code>get_screenshot()</code></li>
-                </ul>
-            </section>
-
-            <section id="configuration">
-                <h2>Configuration</h2>
-                <p>Edit <code>config.yaml</code> to set recognition thresholds, table positions, or theme preferences.</p>
-            </section>
-        </div>
-    </div>
+    <section>
+      <h2>Troubleshooting</h2>
+      <p><strong>Models not detecting?</strong> Check screen region, use more data, test with <code>test_models.py</code></p>
+      <p><strong>Slow performance?</strong> Reduce capture resolution or detection frequency</p>
+    </section>
+  </div>
 </body>
 </html>
