@@ -29,7 +29,8 @@ class PokerCV:
         self.running = False
         self.player_cards = []
         self.table_cards = []
-        self.game_state = "Pre-flop"        self.hand_analysis = None
+        self.game_state = "Pre-flop"
+        self.hand_analysis = None
         self.strategy_advice = None
         self.recognition_method = recognition_method
         self.advisor = PokerAdvisor()
