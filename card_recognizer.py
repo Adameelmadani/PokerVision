@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import os
+import glob
 
 # Map numeric predictions to card ranks and suits
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A']  # Removed '10'
@@ -146,6 +147,48 @@ def extract_card_image(image, region):
         'rank_suit': rank_img
     }
 
+def load_card_templates():
+    """
+    Load card template images for template matching approach
+    
+    Returns:
+        tuple: (rank_templates, suit_templates) dictionaries with template images
+    """
+    # Get paths to template directories
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    templates_dir = os.path.join(data_dir, "templates")
+    rank_dir = os.path.join(templates_dir, "ranks")
+    suit_dir = os.path.join(templates_dir, "suits")
+    
+    # Create template directories if they don't exist
+    os.makedirs(rank_dir, exist_ok=True)
+    os.makedirs(suit_dir, exist_ok=True)
+    
+    # Load rank templates
+    rank_templates = {}
+    for rank in RANKS:
+        rank_path = os.path.join(rank_dir, f"{rank}.png")
+        if os.path.exists(rank_path):
+            rank_templates[rank] = cv2.imread(rank_path)
+        else:
+            print(f"Warning: Template for rank {rank} not found at {rank_path}")
+            
+    # Load suit templates
+    suit_templates = {}
+    for suit in SUITS:
+        suit_path = os.path.join(suit_dir, f"{suit}.png")
+        if os.path.exists(suit_path):
+            suit_templates[suit] = cv2.imread(suit_path)
+        else:
+            print(f"Warning: Template for suit {suit} not found at {suit_path}")
+    
+    if not rank_templates:
+        print("No rank templates found. Please add template images to data/templates/ranks/")
+    if not suit_templates:
+        print("No suit templates found. Please add template images to data/templates/suits/")
+        
+    return rank_templates, suit_templates
+
 def recognize_card_template_matching(card_image, templates):
     """
     Template matching approach for extremely consistent card images
@@ -157,10 +200,20 @@ def recognize_card_template_matching(card_image, templates):
     Returns:
         str: Name of the best matching template
     """
+    if not templates:
+        # If no templates available, fall back to simple recognition
+        if "suit" in locals():
+            return simple_card_recognition(card_image)[1]  # Return suit
+        else:
+            return simple_card_recognition(card_image)[0]  # Return rank
+        
     best_match = None
     best_score = float('-inf')
     
     for name, template in templates.items():
+        if template is None:
+            continue
+            
         # Resize template to match card image size if needed
         template_resized = cv2.resize(template, (card_image.shape[1], card_image.shape[0]))
         
@@ -172,6 +225,14 @@ def recognize_card_template_matching(card_image, templates):
             best_score = score
             best_match = name
     
+    # If confidence is too low, fall back to simple recognition
+    if best_score < 0.5:
+        print(f"Low confidence match ({best_score:.2f}). Using fallback.")
+        if best_match in SUITS:
+            return simple_card_recognition(card_image)[1]  # Return suit
+        else:
+            return simple_card_recognition(card_image)[0]  # Return rank
+        
     return best_match
 
 def predict_empty_position(preprocessed_image):

@@ -2,11 +2,13 @@ import time
 import threading
 import pygame
 import os
+import sys
 import numpy as np
 import cv2
+import argparse
 from screenshot import take_screenshot
 from card_detector import detect_cards
-from card_recognizer import recognize_cards, preprocess_card_image, predict_card_with_models, simple_card_recognition, rank_model_loaded, suit_model_loaded, empty_model_loaded, predict_empty_position
+from card_recognizer import recognize_cards, preprocess_card_image, predict_card_with_models, simple_card_recognition, rank_model_loaded, suit_model_loaded, empty_model_loaded, predict_empty_position, recognize_card_template_matching, load_card_templates
 from poker_evaluator import get_hand_analysis
 
 # Game states
@@ -17,14 +19,25 @@ GAME_STATES = {
     5: "River"
 }
 
+# Recognition methods
+RECOGNITION_METHODS = ["neural", "template"]
+
 class PokerCV:
-    def __init__(self):
+    def __init__(self, recognition_method="neural"):
         self.running = False
         self.player_cards = []
         self.table_cards = []
         self.game_state = "Pre-flop"
         self.hand_analysis = None
+        self.recognition_method = recognition_method
         # Not loading empty images directly, will use model predictions
+        
+# Load templates if using template matching
+        if self.recognition_method == "template":
+            print("Using template matching for card recognition")
+            self.rank_templates, self.suit_templates = load_card_templates()
+        else:
+            print("Using neural networks for card recognition")
         
         # Initialize pygame for the interface
         pygame.init()
@@ -33,7 +46,7 @@ class PokerCV:
         self.font = pygame.font.SysFont("Arial", 16)
         self.clock = pygame.time.Clock()
         self.bg_color = (0, 100, 0)  # Poker table green
-    
+        
     def is_position_empty(self, image, position, region_type):
         """Check if a card position is empty using the trained model"""
         # Preprocess the image for the model
@@ -66,16 +79,20 @@ class PokerCV:
         preprocessed_rank = preprocess_card_image(screenshot_rank)
         preprocessed_suit = preprocess_card_image(screenshot_suit)
         
-        # Get card rank and suit
-        if rank_model_loaded and suit_model_loaded:
-            # Use rank model for rank image and suit model for suit image
+        # Get card rank and suit based on selected recognition method
+        if self.recognition_method == "neural" and rank_model_loaded and suit_model_loaded:
+            # Use neural network models
             rank = predict_card_with_models(preprocessed_rank)[0]  # Get only rank
             suit = predict_card_with_models(preprocessed_suit)[1]  # Get only suit
+        elif self.recognition_method == "template":
+            # Use template matching
+            rank = recognize_card_template_matching(screenshot_rank, self.rank_templates)
+            suit = recognize_card_template_matching(screenshot_suit, self.suit_templates)
         else:
             # Fallback using simple recognition
             rank, _ = simple_card_recognition(screenshot_rank)
             _, suit = simple_card_recognition(screenshot_suit)
-            
+  
         return {"rank": rank, "suit": suit, "empty": False}
         
     def _detection_loop(self):
@@ -215,10 +232,47 @@ if __name__ == "__main__":
     suits_dir = os.path.join(data_dir, "cards_suits")
     numbers_dir = os.path.join(data_dir, "cards_numbers")
     empty_dir = os.path.join(data_dir, "empty_positions")
+    templates_dir = os.path.join(data_dir, "templates")
     
     os.makedirs(suits_dir, exist_ok=True)
     os.makedirs(numbers_dir, exist_ok=True)
     os.makedirs(empty_dir, exist_ok=True)
+    os.makedirs(templates_dir, exist_ok=True)
+    os.makedirs(os.path.join(templates_dir, "ranks"), exist_ok=True)
+    os.makedirs(os.path.join(templates_dir, "suits"), exist_ok=True)
     
-    app = PokerCV()
+    # Parse command line arguments with argparse
+    parser = argparse.ArgumentParser(description='PokerVision - Card Recognition System')
+    parser.add_argument('method', nargs='?', default='neural',
+                        choices=RECOGNITION_METHODS,
+                        help='Card recognition method: neural (neural networks) or template (template matching)')
+    parser.add_argument('--list-methods', action='store_true',
+                        help='List available recognition methods')
+    
+    args = parser.parse_args()
+    
+    if args.list_methods:
+        print("Available recognition methods:")
+        print("  neural   - Use trained neural networks for card recognition")
+        print("  template - Use OpenCV template matching for card recognition")
+        print("\nExample usage: python main.py template")
+        sys.exit(0)
+    
+    recognition_method = args.method
+    print(f"Using {recognition_method} method for card recognition")
+    
+    # Check for template availability if using template matching
+    if recognition_method == "template":
+        rank_templates, suit_templates = load_card_templates()
+        if not rank_templates or not suit_templates:
+            print("\nWARNING: Missing template images for template matching")
+            print("Please add template images to:")
+            for rank in ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A']:
+                print(f"  {os.path.join(templates_dir, 'ranks', f'{rank}.png')}")
+            for suit in ['Clubs', 'Diamonds', 'Hearts', 'Spades']:
+                print(f"  {os.path.join(templates_dir, 'suits', f'{suit}.png')}")
+            print("\nFalling back to neural network method")
+            recognition_method = "neural"
+    
+    app = PokerCV(recognition_method)
     app.run_interface()
