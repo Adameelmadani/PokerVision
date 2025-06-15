@@ -10,6 +10,8 @@ from screenshot import take_screenshot
 from card_detector import detect_cards
 from card_recognizer import recognize_cards, preprocess_card_image, predict_card_with_models, simple_card_recognition, rank_model_loaded, suit_model_loaded, empty_model_loaded, predict_empty_position, recognize_card_template_matching, load_card_templates
 from poker_evaluator import get_hand_analysis
+from poker_advisor import PokerAdvisor
+from position_detector import PositionDetector
 
 # Game states
 GAME_STATES = {
@@ -27,9 +29,12 @@ class PokerCV:
         self.running = False
         self.player_cards = []
         self.table_cards = []
-        self.game_state = "Pre-flop"
-        self.hand_analysis = None
+        self.game_state = "Pre-flop"        self.hand_analysis = None
+        self.strategy_advice = None
         self.recognition_method = recognition_method
+        self.advisor = PokerAdvisor()
+        self.position_detector = PositionDetector()
+        
         # Not loading empty images directly, will use model predictions
         
 # Load templates if using template matching
@@ -38,12 +43,12 @@ class PokerCV:
             self.rank_templates, self.suit_templates = load_card_templates()
         else:
             print("Using neural networks for card recognition")
-        
-        # Initialize pygame for the interface
+          # Initialize pygame for the interface
         pygame.init()
-        self.screen = pygame.display.set_mode((300, 500))
-        pygame.display.set_caption("PokerCV - Poker Card Recognition")
+        self.screen = pygame.display.set_mode((400, 600))
+        pygame.display.set_caption("PokerCV - Poker Assistant")
         self.font = pygame.font.SysFont("Arial", 16)
+        self.font_bold = pygame.font.SysFont("Arial", 16, bold=True)
         self.clock = pygame.time.Clock()
         self.bg_color = (0, 100, 0)  # Poker table green
         
@@ -147,13 +152,20 @@ class PokerCV:
             
             # Update the card lists
             self.player_cards = player_cards
-            self.table_cards = table_cards
-            
-            # Calculate hand analysis if we have player cards
+            self.table_cards = table_cards            # Calculate hand analysis if we have player cards
             if any(not card.get('empty', False) for card in player_cards):
                 self.hand_analysis = get_hand_analysis(player_cards, table_cards)
+                
+                # Detect position and get strategy advice
+                position = self.position_detector.detect_position()
+                self.strategy_advice = self.advisor.analyze_situation(
+                    player_cards,
+                    table_cards,
+                    position=position
+                )
             else:
                 self.hand_analysis = None
+                self.strategy_advice = None
             
             # Sleep to avoid high CPU usage
             time.sleep(2)
@@ -206,8 +218,7 @@ class PokerCV:
                         card_text = f"Card {i+1}: {card['rank']} of {card['suit']}"
                     self.screen.blit(self.font.render(card_text, True, (255, 255, 255)), (20, y_position))
                     y_position += 25
-            
-            # Display hand analysis
+              # Display hand analysis
             y_position += 40
             self.screen.blit(self.font.render("Hand Analysis:", True, (255, 255, 255)), (20, y_position))
             y_position += 30
@@ -216,6 +227,47 @@ class PokerCV:
                 self.screen.blit(self.font.render(f"Hand: {self.hand_analysis['hand_name']}", True, (255, 255, 255)), (20, y_position))
                 y_position += 25
                 self.screen.blit(self.font.render(f"Win Probability: {self.hand_analysis['win_probability']:.2f}%", True, (255, 255, 255)), (20, y_position))
+                  # Display strategy advice
+                if self.strategy_advice:
+                    y_position += 40
+                    self.screen.blit(self.font_bold.render("Strategy Advice:", True, (255, 255, 255)), (20, y_position))
+                    y_position += 30
+                    
+                    # Show position and strength indicators
+                    position_color = (100, 255, 100) if self.strategy_advice['position_strength'] > 0.6 else (255, 255, 255)
+                    self.screen.blit(self.font.render(f"Position: {self.strategy_advice.get('position', 'Unknown')}", True, position_color), (20, y_position))
+                    y_position += 25
+                    
+                    # Color-code the action based on aggressiveness
+                    action = self.strategy_advice['action']
+                    action_color = (255, 255, 100) if 'Raise' in action else \
+                                 (100, 255, 100) if 'Call' in action else \
+                                 (255, 100, 100) if 'Fold' in action else \
+                                 (255, 255, 255)
+                    
+                    self.screen.blit(self.font_bold.render(f"Recommended Action:", True, (255, 255, 255)), (20, y_position))
+                    y_position += 25
+                    self.screen.blit(self.font.render(action, True, action_color), (40, y_position))
+                    y_position += 25
+                    
+                    # Show reasoning with word wrap
+                    reasoning = self.strategy_advice['reasoning']
+                    self.screen.blit(self.font_bold.render("Reasoning:", True, (255, 255, 255)), (20, y_position))
+                    y_position += 25
+                    
+                    # Word wrap the reasoning text
+                    words = reasoning.split()
+                    line = ""
+                    for word in words:
+                        test_line = line + word + " "
+                        if self.font.size(test_line)[0] < self.screen.get_width() - 40:
+                            line = test_line
+                        else:
+                            self.screen.blit(self.font.render(line, True, (255, 255, 255)), (40, y_position))
+                            y_position += 20
+                            line = word + " "
+                    if line:
+                        self.screen.blit(self.font.render(line, True, (255, 255, 255)), (40, y_position))
             else:
                 self.screen.blit(self.font.render("No valid hand detected", True, (255, 255, 255)), (20, y_position))
             
