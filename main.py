@@ -12,6 +12,7 @@ from card_recognizer import recognize_cards, preprocess_card_image, predict_card
 from poker_evaluator import get_hand_analysis
 from poker_advisor import PokerAdvisor
 from position_detector import PositionDetector
+from nlp_module import SimpleNLP
 
 # Game states
 GAME_STATES = {
@@ -57,6 +58,7 @@ class PokerCV:
         self.font = pygame.font.SysFont("Arial", 12)
         self.font_bold = pygame.font.SysFont("Arial", 12, bold=True)
         self.small_font = pygame.font.SysFont("Arial", 10)
+        self.text_font = self.font  # Adding text_font as an alias for the regular font
         
         # Color scheme
         self.colors = {
@@ -84,6 +86,13 @@ class PokerCV:
         
         self.clock = pygame.time.Clock()
         
+        # NLP components
+        self.nlp = SimpleNLP()
+        self.current_nlp_prompt = None
+        self.nlp_response = ""
+        self.available_prompts = self.nlp.get_available_prompts()
+        self.selected_prompt_index = 0
+
     def is_position_empty(self, image, position, region_type):
         """Check if a card position is empty using the trained model"""
         # Preprocess the image for the model
@@ -195,6 +204,12 @@ class PokerCV:
                     table_cards,
                     position=position
                 )
+                # Update NLP module with current game state
+                self.nlp.update_game_state(
+                    self.hand_analysis,
+                    self.strategy_advice,
+                    self.game_state
+                )
             else:
                 self.hand_analysis = None
                 self.strategy_advice = None
@@ -204,39 +219,64 @@ class PokerCV:
         
     def run_interface(self):
         """Run the main interface loop"""
+        clock = pygame.time.Clock()
+        running = True
+        
+        # Start the detection thread
         self.start_detection()
         
-        running = True
+        # Initialize tab system
+        tabs = ["Cards", "Analysis", "NLP"]
+        active_tab = 0
+        
         while running:
+            # Process events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                
+                # Tab switching
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for i, tab in enumerate(tabs):
+                        tab_rect = pygame.Rect(i * 120 + 10, 10, 100, 30)
+                        if tab_rect.collidepoint(event.pos):
+                            active_tab = i
+                
+                # Handle NLP tab events
+                if active_tab == 2:  # NLP tab
+                    self.handle_nlp_events(event, 50)
             
-            # Clear the screen with gradient background
-            self.screen.fill(self.colors['background'])
+            # Clear the screen
+            self.screen.fill((30, 30, 30))
             
-            # Draw header
-            self.draw_header()
+            # Draw tabs
+            for i, tab in enumerate(tabs):
+                tab_rect = pygame.Rect(i * 120 + 10, 10, 100, 30)
+                if i == active_tab:
+                    pygame.draw.rect(self.screen, (80, 80, 120), tab_rect)
+                else:
+                    pygame.draw.rect(self.screen, (60, 60, 60), tab_rect)
+                self.screen.blit(self.header_font.render(tab, True, (255, 255, 255)), 
+                                (tab_rect.x + 25, tab_rect.y + 5))
             
-            # Draw card sections with minimal spacing
-            y_position = self.draw_player_cards(70)  # Start right after header
-            y_position = self.draw_table_cards(y_position + 10)
-            
-            # Draw analysis sections
-            if self.hand_analysis:
-                y_position = self.draw_hand_analysis(y_position + 10)
-            else:
-                self.draw_panel("Hand Analysis", "No valid hand detected", y_position + 10, height=60)
-                y_position += 70
-            
-            # Draw strategy advice
-            if self.strategy_advice:
-                self.draw_strategy_advice(y_position + 10)
+            # Draw active tab content
+            if active_tab == 0:  # Cards tab
+                self.draw_player_cards(50)
+                self.draw_table_cards(200)
+            elif active_tab == 1:  # Analysis tab
+                self.draw_game_state(50)
+                self.draw_hand_analysis(150)
+                self.draw_win_probability(270)
+            elif active_tab == 2:  # NLP tab
+                self.draw_nlp_tab(50)
             
             # Update the display
             pygame.display.flip()
-            self.clock.tick(30)
+            
+            # Cap the frame rate
+            clock.tick(30)
         
+        # Clean up when exiting
         self.running = False
         pygame.quit()
     
@@ -490,6 +530,175 @@ class PokerCV:
                             (x_text + 5, y_text))
         
         return y
+
+    def draw_game_state(self, y_position):
+        """Draw game state section (new for tab system)"""
+        panel_height = 65
+        y = self.draw_panel("Game State", f"Current state: {self.game_state}", y_position, panel_height)
+        return y
+    
+    def draw_win_probability(self, y_position):
+        """Draw win probability section (new for tab system)"""
+        if not self.hand_analysis:
+            y = self.draw_panel("Win Probability", "No data available", y_position, 65)
+            return y
+            
+        panel_height = 85
+        win_prob = self.hand_analysis['win_probability']
+        y = self.draw_panel("Win Probability", f"{win_prob:.1f}%", y_position, panel_height)
+        
+        # Draw win probability bar
+        bar_width = self.screen.get_width() - 70
+        bar_height = 10
+        bar_x = 35
+        bar_y = y_position + 60
+        
+        # Background bar
+        pygame.draw.rect(self.screen, (60, 60, 60), 
+                        (bar_x, bar_y, bar_width, bar_height))
+        
+        # Progress bar
+        win_prob = self.hand_analysis['win_probability'] / 100
+        prob_width = int(win_prob * bar_width)
+        
+        # Color based on win probability
+        if win_prob < 0.3:
+            bar_color = (200, 50, 50)  # Red
+        elif win_prob < 0.6:
+            bar_color = (200, 200, 50)  # Yellow
+        else:
+            bar_color = (50, 200, 50)  # Green
+            
+        pygame.draw.rect(self.screen, bar_color, 
+                        (bar_x, bar_y, prob_width, bar_height))
+        
+        # Border
+        pygame.draw.rect(self.screen, (200, 200, 200), 
+                        (bar_x, bar_y, bar_width, bar_height), 1)
+                
+        return y
+        
+    def draw_nlp_tab(self, y_position):
+        """Draw the NLP assistant tab"""
+        # Draw NLP panel
+        panel_height = 200
+        self.draw_panel("NLP Assistant", "Ask about poker or the system", y_position, panel_height)
+        
+        # Display available prompts as a selectable list
+        prompt_y = y_position + 50
+        prompt_x = 20
+        
+        # Draw the currently selected prompt with up/down navigation
+        self.screen.blit(self.header_font.render("Select a question:", True, (255, 255, 255)), (prompt_x, prompt_y))
+        
+        # Draw up arrow button 
+        up_arrow_rect = pygame.Rect(340, prompt_y - 5, 20, 20)
+        pygame.draw.rect(self.screen, (80, 80, 80), up_arrow_rect)
+        pygame.draw.polygon(self.screen, (200, 200, 200), 
+            [(340 + 10, prompt_y), (340 + 5, prompt_y + 10), (340 + 15, prompt_y + 10)])
+        
+        # Draw the currently selected prompt with highlighting
+        current_prompt = self.available_prompts[self.selected_prompt_index]
+        # Truncate if too long
+        if len(current_prompt) > 40:
+            display_prompt = current_prompt[:37] + "..."
+        else:
+            display_prompt = current_prompt
+        
+        # Draw selection background
+        prompt_rect = pygame.Rect(prompt_x, prompt_y + 20, 310, 20)
+        pygame.draw.rect(self.screen, (50, 70, 50), prompt_rect)
+        pygame.draw.rect(self.screen, (100, 120, 100), prompt_rect, 1)  # Border
+        
+        self.screen.blit(self.text_font.render(display_prompt, True, (220, 220, 0)), 
+                        (prompt_x + 5, prompt_y + 22))
+        
+        # Draw down arrow button
+        down_arrow_rect = pygame.Rect(340, prompt_y + 20, 20, 20)
+        pygame.draw.rect(self.screen, (80, 80, 80), down_arrow_rect)
+        pygame.draw.polygon(self.screen, (200, 200, 200), 
+            [(340 + 10, prompt_y + 35), (340 + 5, prompt_y + 25), (340 + 15, prompt_y + 25)])
+        
+        # Ask button
+        ask_button_rect = pygame.Rect(240, prompt_y + 45, 80, 30)
+        pygame.draw.rect(self.screen, (100, 150, 100), ask_button_rect)
+        self.screen.blit(self.text_font.render("Ask", True, (255, 255, 255)), 
+                         (ask_button_rect.x + 25, ask_button_rect.y + 8))
+        
+        # Display response
+        response_y = prompt_y + 85
+        response_rect = pygame.Rect(prompt_x, response_y, 340, 80)
+        pygame.draw.rect(self.screen, (50, 50, 50), response_rect)
+        
+        # Add response header
+        if self.nlp_response:
+            self.screen.blit(self.font_bold.render("Answer:", True, (180, 220, 180)), 
+                            (prompt_x + 5, response_y + 5))
+            response_start_y = response_y + 25
+        else:
+            self.screen.blit(self.font.render("Select a question and click 'Ask'", True, (180, 180, 180)), 
+                            (prompt_x + 10, response_y + 30))
+            response_start_y = response_y + 10
+        
+        # Wrap text to fit in the response box
+        if self.nlp_response:
+            words = self.nlp_response.split(' ')
+            lines = []
+            current_line = ""
+            for word in words:
+                test_line = current_line + word + " "
+                if self.text_font.size(test_line)[0] < response_rect.width - 20:
+                    current_line = test_line
+                else:
+                    lines.append(current_line)
+                    current_line = word + " "
+            if current_line:
+                lines.append(current_line)
+            
+            # Draw response text
+            for i, line in enumerate(lines[:3]):  # Limit to 3 lines to fit better
+                self.screen.blit(self.text_font.render(line, True, (220, 220, 220)), 
+                                (response_rect.x + 10, response_start_y + i * 20))
+
+    def handle_nlp_events(self, event, y_position):
+        """Handle NLP tab interaction events"""
+        prompt_y = y_position + 50
+        
+        # Check for prompt navigation (up/down)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and self.selected_prompt_index > 0:
+                self.selected_prompt_index -= 1
+            elif event.key == pygame.K_DOWN and self.selected_prompt_index < len(self.available_prompts) - 1:
+                self.selected_prompt_index += 1
+        
+        # Check for mouse clicks
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Check up arrow click
+            up_arrow_rect = pygame.Rect(340, prompt_y - 5, 20, 20)
+            if up_arrow_rect.collidepoint(event.pos) and self.selected_prompt_index > 0:
+                self.selected_prompt_index -= 1
+                
+            # Check down arrow click
+            down_arrow_rect = pygame.Rect(340, prompt_y + 20, 20, 20)
+            if down_arrow_rect.collidepoint(event.pos) and self.selected_prompt_index < len(self.available_prompts) - 1:
+                self.selected_prompt_index += 1
+                
+            # Check prompt selection area click
+            prompt_rect = pygame.Rect(20, prompt_y + 20, 310, 20)
+            if prompt_rect.collidepoint(event.pos):
+                # Calculate which prompt to select based on mouse y position
+                if event.button == 4:  # Mouse wheel up
+                    if self.selected_prompt_index > 0:
+                        self.selected_prompt_index -= 1
+                elif event.button == 5:  # Mouse wheel down
+                    if self.selected_prompt_index < len(self.available_prompts) - 1:
+                        self.selected_prompt_index += 1
+            
+            # Check for Ask button click
+            ask_button_rect = pygame.Rect(240, prompt_y + 45, 80, 30)
+            if ask_button_rect.collidepoint(event.pos):
+                prompt = self.available_prompts[self.selected_prompt_index]
+                self.nlp_response = self.nlp.get_response(prompt)
 
 if __name__ == "__main__":
     # Create data directories if they don't exist
