@@ -710,7 +710,7 @@ class MonteCarloEngine:
         return [(rank, suit) for rank in ranks for suit in suits]
     
     def simulate_hand(self, player_cards, community_cards, num_opponents):
-        """Simule une main complète et retourne le résultat"""
+        """Simule une main de poker"""
         
         # Cartes connues
         known_cards = player_cards + community_cards
@@ -1264,11 +1264,11 @@ optimal_config = {
                         <div class="metric-label">Taux de Victoire Global</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">765%</div>
+                        <div class="metric-value">865%</div>
                         <div class="metric-label">Retour sur Investissement</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">$153,000</div>
+                        <div class="metric-value">$173,000</div>
                         <div class="metric-label">Profit Net</div>
                     </div>
                     <div class="metric-card">
@@ -1590,7 +1590,420 @@ PRODUCTION = {
                     </div>
                 </div>
             </section>
+
+            <!-- Troubleshooting Section -->
+            <section id="troubleshooting" class="section">
+                <h1>Guide de Dépannage</h1>
+
+                <h2>Problèmes Courants</h2>
+                <table>
+                    <tr>
+                        <th>Problème</th>
+                        <th>Cause Probable</th>
+                        <th>Solution</th>
+                    </tr>
+                    <tr>
+                        <td>Échec de détection des cartes</td>
+                        <td>Position incorrecte de la fenêtre PokerStars</td>
+                        <td>Recalibrer les régions avec l'outil de calibrage</td>
+                    </tr>
+                    <tr>
+                        <td>Erreur de classification</td>
+                        <td>Mauvaise luminosité/contraste</td>
+                        <td>Ajuster les paramètres d'affichage de PokerStars</td>
+                    </tr>
+                    <tr>
+                        <td>Performance lente</td>
+                        <td>Ressources système insuffisantes</td>
+                        <td>Réduire num_simulations dans config.py</td>
+                    </tr>
+                </table>
+
+                <h2>Messages d'Erreur</h2>
+                <div class="code-block">
+# Erreur: Failed to capture screen region
+Solution: Vérifier les permissions d'accès à l'écran
+
+# Erreur: Model file not found
+Solution: Télécharger les modèles pré-entraînés
+
+# Erreur: CUDA out of memory
+Solution: Réduire batch_size dans config.py
+                </div>
+
+                <h2>Diagnostics</h2>
+                <h3>1. Test de Vision</h3>
+                <div class="code-block">
+python tools/test_vision.py --verbose
+                </div>
+
+                <h3>2. Validation des Modèles</h3>
+                <div class="code-block">
+python tools/validate_models.py
+                </div>
+
+                <h3>3. Test de Performance</h3>
+                <div class="code-block">
+python tools/benchmark.py
+                </div>
+
+                <h2>Journal des Erreurs</h2>
+                <p>Les logs sont stockés dans:</p>
+                <div class="code-block">
+logs/
+  ├── vision.log    # Erreurs de détection
+  ├── models.log    # Erreurs de classification
+  └── system.log    # Erreurs système
+                </div>
+
+                <div class="warning">
+                    <strong>Note:</strong> Si le problème persiste après ces étapes, consultez le forum de support ou créez une issue sur GitHub.
+                </div>
+            </section>
+
+            <!-- Future Improvements Section -->
+            <section id="future" class="section">
+                <h1>Améliorations Futures</h1>
+
+                <h2>Vision par Ordinateur</h2>
+                <h3>Court Terme</h3>
+                <ul>
+                    <li>Support de la détection multi-tables</li>
+                    <li>Amélioration de la robustesse aux variations de luminosité</li>
+                    <li>Détection automatique des mises et du pot</li>
+                </ul>
+
+                <h3>Long Terme</h3>
+                <ul>
+                    <li>Intégration de la détection d'émotions des avatars</li>
+                    <li>Support de plusieurs plateformes de poker en ligne</li>
+                    <li>Adaptation automatique aux différentes résolutions d'écran</li>
+                </ul>
+
+                <h2>Intelligence Artificielle</h2>
+                <h3>Court Terme</h3>
+                <ul>
+                    <li>Optimisation des hyperparamètres par recherche bayésienne</li>
+                    <li>Intégration d'un modèle de profiling des adversaires</li>
+                    <li>Amélioration de la précision des simulations Monte Carlo</li>
+                </ul>
+
+                <h3>Long Terme</h3>
+                <ul>
+                    <li>Développement d'un moteur de stratégie basé sur l'apprentissage par renforcement</li>
+                    <li>Intégration d'analyses de tendances à long terme</li>
+                    <li>Support du multi-threading pour les simulations</li>
+                </ul>
+
+                <h2>Interface Utilisateur</h2>
+                <h3>Améliorations Prévues</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">Q3 2024</div>
+                        <div class="metric-label">Interface Web</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">Q4 2024</div>
+                        <div class="metric-label">Mode Analyse Post-Game</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">Q1 2025</div>
+                        <div class="metric-label">Support Mobile</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">Q2 2025</div>
+                        <div class="metric-label">Mode VR</div>
+                    </div>
+                </div>
+
+                <h2>Feuille de Route</h2>
+                <div class="info-box">
+                    <h3>Version 2.0 (Q4 2024)</h3>
+                    <ul>
+                        <li>Support multi-tables</li>
+                        <li>Interface web responsive</li>
+                        <li>Profilage des adversaires</li>
+                        <li>Rapports d'analyse détaillés</li>
+                    </ul>
+
+                    <h3>Version 3.0 (Q2 2025)</h3>
+                    <ul>
+                        <li>IA par apprentissage par renforcement</li>
+                        <li>Support VR/AR</li>
+                        <li>API publique</li>
+                        <li>Mode tournoi</li>
+                    </ul>
+                </div>
+
+                <h2>Contribution</h2>
+                <p>Les contributions sont les bienvenues! Consultez CONTRIBUTING.md pour les directives.</p>
+
+                <div class="warning">
+                    <strong>Note:</strong> Cette feuille de route est indicative et peut évoluer selon les retours utilisateurs et les priorités du projet.
+                </div>
+            </section>
+
+            <!-- API Reference Section -->
+            <section id="api" class="section">
+                <h1>Référence API</h1>
+
+                <h2>Module Vision (card_detector.py)</h2>
+                <div class="code-block">
+class CardDetector:
+    """
+    Détecte et extrait les cartes d'une image.
+    
+    Attributes:
+        templates (dict): Templates des cartes
+        regions (dict): Régions de détection
+    """
+    
+    def detect_cards(self, image):
+        """
+        Détecte les cartes dans une image.
+        
+        Args:
+            image (np.array): Image source
+        
+        Returns:
+            list: Liste des cartes détectées
+        """
+
+    def preprocess_image(self, image):
+        """
+        Prétraite l'image pour la détection.
+        
+        Args:
+            image (np.array): Image source
+        
+        Returns:
+            np.array: Image prétraitée
+        """
+                </div>
+
+                <h2>Module Classification (card_recognizer.py)</h2>
+                <div class="code-block">
+class CardRecognizer:
+    """
+    Classifie les rangs et couleurs des cartes.
+    
+    Attributes:
+        rank_model: Modèle CNN pour les rangs
+        suit_model: Modèle CNN pour les couleurs
+    """
+    
+    def recognize_card(self, card_image):
+        """
+        Identifie une carte.
+        
+        Args:
+            card_image (np.array): Image de la carte
+        
+        Returns:
+            tuple: (rang, couleur)
+        """
+
+    def predict_rank(self, image):
+        """
+        Prédit le rang d'une carte.
+        
+        Args:
+            image (np.array): Image du rang
+        
+        Returns:
+            str: Rang prédit
+        """
+                </div>
+
+                <h2>Module Monte Carlo (poker_evaluator.py)</h2>
+                <div class="code-block">
+class MonteCarloEngine:
+    """
+    Moteur de simulation Monte Carlo.
+    
+    Args:
+        num_simulations (int): Nombre de simulations
+    """
+    
+    def simulate_hand(self, player_cards, community_cards, num_opponents):
+        """
+        Simule une main de poker.
+        
+        Args:
+            player_cards (list): Cartes du joueur
+            community_cards (list): Cartes communautaires
+            num_opponents (int): Nombre d'adversaires
+        
+        Returns:
+            float: Probabilité de victoire
+        """
+
+    def evaluate_hand(self, cards):
+        """
+        Évalue la force d'une main.
+        
+        Args:
+            cards (list): Liste de cartes
+        
+        Returns:
+            int: Score de la main
+        """
+                </div>
+
+                <h2>Module Stratégie (poker_advisor.py)</h2>
+                <div class="code-block">
+class PokerAdvisor:
+    """
+    Génère des conseils stratégiques.
+    
+    Attributes:
+        mc_engine: Instance de MonteCarloEngine
+        position_analyzer: Analyseur de position
+    """
+    
+    def get_advice(self, game_state):
+        """
+        Génère un conseil stratégique.
+        
+        Args:
+            game_state (dict): État actuel du jeu
+        
+        Returns:
+            dict: Conseil et probabilités
+        """
+
+    def calculate_ev(self, win_prob, pot_size, bet_size):
+        """
+        Calcule l'espérance de gain.
+        
+        Args:
+            win_prob (float): Probabilité de victoire
+            pot_size (int): Taille du pot
+            bet_size (int): Taille de la mise
+        
+        Returns:
+            float: Espérance de gain
+        """
+                </div>
+
+                <h2>Configuration (config.py)</h2>
+                <div class="code-block">
+# Configuration des modèles
+MODEL_CONFIG = {
+    'batch_size': 32,
+    'learning_rate': 0.001,
+    'epochs': 50
+}
+
+# Configuration de la détection
+VISION_CONFIG = {
+    'threshold': 0.8,
+    'min_area': 1000,
+    'max_area': 10000
+}
+
+# Configuration Monte Carlo
+MC_CONFIG = {
+    'num_simulations': 10000,
+    'num_threads': 4
+}
+                </div>
+
+                <h2>Utilisation des Classes</h2>
+                <div class="code-block">
+# Exemple d'utilisation de l'API
+from card_detector import CardDetector
+from card_recognizer import CardRecognizer
+from poker_evaluator import MonteCarloEngine
+from poker_advisor import PokerAdvisor
+
+# Initialisation
+detector = CardDetector()
+recognizer = CardRecognizer()
+mc_engine = MonteCarloEngine()
+advisor = PokerAdvisor(mc_engine)
+
+# Capture et analyse d'une main
+game_image = capture_screen()
+cards = detector.detect_cards(game_image)
+player_cards = [recognizer.recognize_card(card) for card in cards[:2]]
+community_cards = [recognizer.recognize_card(card) for card in cards[2:]]
+
+# Simulation et conseil
+win_prob = mc_engine.simulate_hand(player_cards, community_cards, 3)
+advice = advisor.get_advice({
+    'player_cards': player_cards,
+    'community_cards': community_cards,
+    'win_prob': win_prob,
+    'pot_size': 100,
+    'bet_size': 20
+})
+                </div>
+
+                <h2>Gestion des Erreurs</h2>
+                <div class="code-block">
+class VisionError(Exception):
+    """Erreur de détection de cartes"""
+    pass
+
+class ModelError(Exception):
+    """Erreur de classification"""
+    pass
+
+class SimulationError(Exception):
+    """Erreur de simulation Monte Carlo"""
+    pass
+                </div>
+
+                <h2>Types de Données</h2>
+                <table>
+                    <tr>
+                        <th>Type</th>
+                        <th>Format</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Card</td>
+                        <td>tuple(str, str)</td>
+                        <td>(rang, couleur)</td>
+                    </tr>
+                    <tr>
+                        <td>GameState</td>
+                        <td>dict</td>
+                        <td>État complet du jeu</td>
+                    </tr>
+                    <tr>
+                        <td>Advice</td>
+                        <td>dict</td>
+                        <td>Conseil stratégique</td>
+                    </tr>
+                </table>
+            </section>
         </main>
     </div>
+
+    <script>
+        // Navigation sidebar functionality
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const sectionId = link.getAttribute('data-section');
+                
+                // Hide all sections
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show selected section
+                document.getElementById(sectionId).classList.add('active');
+                
+                // Update active link
+                document.querySelectorAll('.sidebar a').forEach(a => {
+                    a.classList.remove('active');
+                });
+                link.classList.add('active');
+            });
+        });
+    </script>
 </body>
 </html>
