@@ -285,14 +285,14 @@ class PokerCV:
                         (10, y_position, width, height),
                         width=1, border_radius=6)
         
-        # Panel title
+        # Panel title with increased padding
         title_surf = self.header_font.render(title, True, self.colors['header'])
-        self.screen.blit(title_surf, (padding + 5, y_position + 8))
+        self.screen.blit(title_surf, (padding + 8, y_position + 8))
         
         # Optional subtitle
         if subtitle:
             subtitle_surf = self.font.render(subtitle, True, self.colors['text'])
-            self.screen.blit(subtitle_surf, (padding + 10, y_position + 35))
+            self.screen.blit(subtitle_surf, (padding + 18, y_position + 35))
             
         return y_position + height
     
