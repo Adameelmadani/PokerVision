@@ -7,3 +7,4 @@ tensorflow>=2.8.0
 pygame>=2.0.0
 matplotlib
 seaborn
+nltk

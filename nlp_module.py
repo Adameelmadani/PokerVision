@@ -1,18 +1,39 @@
 import re
 import random
+import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+import nltk
+
+# Download necessary NLTK data (uncomment first time)
+# nltk.download('punkt')
+# nltk.download('stopwords')
 
 class SimpleNLP:
     def __init__(self):
-        # Add new dynamic gameplay queries
-        self.gameplay_queries = {
-            "should i fold": self._get_fold_advice,
-            "should i call": self._get_call_advice,
-            "should i raise": self._get_raise_advice,
-            "what should i do": self._get_general_advice,
-            "is my hand good": self._get_hand_strength_advice
+        # Initialize NLP components
+        self.stemmer = PorterStemmer()
+        try:
+            self.stop_words = set(stopwords.words('english'))
+        except LookupError:
+            # Fallback if NLTK data isn't downloaded
+            self.stop_words = set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"])
+        
+        # Add new dynamic gameplay queries with their triggers
+        self.gameplay_query_triggers = {
+            "fold": self._get_fold_advice,
+            "call": self._get_call_advice,
+            "raise": self._get_raise_advice,
+            "check": self._get_call_advice,
+            "do now": self._get_general_advice,
+            "should i do": self._get_general_advice,
+            "my hand": self._get_hand_strength_advice,
+            "win chance": self._get_hand_strength_advice,
+            "odds": self._get_hand_strength_advice
         }
 
         # Static knowledge base for general queries
@@ -50,10 +71,24 @@ class SimpleNLP:
                 "to see specific accuracy metrics for card rank, suit and empty position recognition."
         }
         
-        # Initialize vectorizer and vectors
-        self.vectorizer = TfidfVectorizer()
-        self.vectors = self.vectorizer.fit_transform(list(self.knowledge_base.keys()) + list(self.gameplay_queries.keys()))
+        # Initialize vectorizer with simpler parameters to avoid validation errors
+        self.vectorizer = TfidfVectorizer(
+            stop_words='english',  # Use built-in English stopwords instead of custom tokenizer
+            ngram_range=(1, 2)     # Keep n-grams
+        )
         
+        # Preprocess knowledge base topics for vectorization
+        self.knowledge_topics = list(self.knowledge_base.keys())
+        
+        # Fit vectorizer to knowledge base topics
+        try:
+            self.vectors = self.vectorizer.fit_transform(self.knowledge_topics)
+        except Exception as e:
+            print(f"Warning: TF-IDF vectorization failed: {str(e)}")
+            # Fallback to simple string matching
+            self.vectorizer = None
+        
+        # Fallback responses
         self.fallback_responses = [
             "I don't have information about that. Try asking about poker hands, odds, or card recognition.",
             "I'm not sure how to answer that. You can ask about poker strategy or the PokerVision system.",
@@ -68,6 +103,28 @@ class SimpleNLP:
             'game_state': None
         }
 
+    def _tokenize_and_stem(self, text):
+        """Tokenize and stem the text"""
+        # Clean text
+        text = text.lower()
+        text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+        
+        # Tokenize
+        tokens = word_tokenize(text)
+        
+        # Remove stopwords and stem
+        return [self.stemmer.stem(word) for word in tokens if word not in self.stop_words]
+    
+    def _preprocess_query(self, query):
+        """Clean and preprocess the user query"""
+        # Convert to lowercase
+        query = query.lower().strip()
+        
+        # Remove punctuation
+        query = query.translate(str.maketrans('', '', string.punctuation))
+        
+        return query
+
     def update_game_state(self, hand_analysis, strategy_advice, game_state):
         """Update the current game state for contextual responses"""
         self.current_game_state = {
@@ -78,26 +135,45 @@ class SimpleNLP:
 
     def get_response(self, query):
         """Enhanced response generation with gameplay advice"""
-        query = query.lower().strip()
+        # Clean and preprocess the query
+        query = self._preprocess_query(query)
         
         if len(query) < 3:
-            return "Please ask a question about poker or the current hand."
-            
-        # Check for gameplay advice queries first
-        for key, handler in self.gameplay_queries.items():
-            if key in query:
+            return "Please ask a question about poker or your current hand."
+        
+        # Check for gameplay advice triggers
+        for trigger, handler in self.gameplay_query_triggers.items():
+            if trigger in query:
                 return handler()
+        
+        # Use vectorization if available, otherwise fall back to string matching
+        if self.vectorizer:
+            try:
+                query_vector = self.vectorizer.transform([query])
+                similarities = cosine_similarity(query_vector, self.vectors).flatten()
+                best_match_index = np.argmax(similarities)
+                best_match_score = similarities[best_match_index]
                 
-        # Fall back to static knowledge base
-        query_vector = self.vectorizer.transform([query])
-        similarities = cosine_similarity(query_vector, self.vectors).flatten()
-        best_match_index = np.argmax(similarities)
-        best_match_score = similarities[best_match_index]
+                # If similarity is above threshold, return the corresponding answer
+                if best_match_score > 0.3:
+                    best_topic = self.knowledge_topics[best_match_index]
+                    return self.knowledge_base[best_topic]
+            except Exception as e:
+                print(f"Warning: TF-IDF matching failed: {str(e)}")
+                # Continue to fallback methods below
+        else:
+            # Simple string matching as fallback
+            for topic, answer in self.knowledge_base.items():
+                if query in topic or topic in query:
+                    return answer
         
-        if best_match_score > 0.3:
-            best_question = list(self.knowledge_base.keys())[best_match_index]
-            return self.knowledge_base[best_question]
-        
+        # If we have game state but no direct query match, try to give helpful advice
+        if self._has_valid_game_state():
+            if any(word in query for word in ['good', 'bad', 'strong', 'weak', 'win']):
+                return self._get_hand_strength_advice()
+            if any(word in query for word in ['do', 'play', 'action', 'move']):
+                return self._get_general_advice()
+                
         return random.choice(self.fallback_responses)
 
     def get_available_prompts(self):

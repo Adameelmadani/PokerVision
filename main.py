@@ -92,6 +92,12 @@ class PokerCV:
         self.nlp_response = ""
         self.available_prompts = self.nlp.get_available_prompts()
         self.selected_prompt_index = 0
+        self.nlp_input_text = ""
+        self.input_active = False  # Track if input box is active
+        
+        # Add blink cursor for text input
+        self.cursor_visible = True
+        self.cursor_blink_time = 0
 
     def is_position_empty(self, image, position, region_type):
         """Check if a card position is empty using the trained model"""
@@ -579,65 +585,66 @@ class PokerCV:
         return y
         
     def draw_nlp_tab(self, y_position):
-        """Draw the NLP assistant tab"""
+        """Draw the NLP assistant tab with text input"""
         # Draw NLP panel
         panel_height = 200
-        self.draw_panel("NLP Assistant", "Ask about poker or the system", y_position, panel_height)
+        self.draw_panel("NLP Assistant", "Ask a question about poker or your current hand", y_position, panel_height)
         
-        # Display available prompts as a selectable list
-        prompt_y = y_position + 50
-        prompt_x = 20
+        # Display text input field
+        input_y = y_position + 50
+        input_x = 20
         
-        # Draw the currently selected prompt with up/down navigation
-        self.screen.blit(self.header_font.render("Select a question:", True, (255, 255, 255)), (prompt_x, prompt_y))
+        # Draw input field label
+        self.screen.blit(self.header_font.render("Your question:", True, (255, 255, 255)), 
+                        (input_x, input_y))
         
-        # Draw up arrow button 
-        up_arrow_rect = pygame.Rect(340, prompt_y - 5, 20, 20)
-        pygame.draw.rect(self.screen, (80, 80, 80), up_arrow_rect)
-        pygame.draw.polygon(self.screen, (200, 200, 200), 
-            [(340 + 10, prompt_y), (340 + 5, prompt_y + 10), (340 + 15, prompt_y + 10)])
+        # Draw text input box
+        input_box_rect = pygame.Rect(input_x, input_y + 20, 280, 30)
+        input_box_color = (80, 120, 80) if self.input_active else (50, 70, 50)
+        pygame.draw.rect(self.screen, input_box_color, input_box_rect)
+        pygame.draw.rect(self.screen, (100, 150, 100), input_box_rect, 1)  # Border
         
-        # Draw the currently selected prompt with highlighting
-        current_prompt = self.available_prompts[self.selected_prompt_index]
-        # Truncate if too long
-        if len(current_prompt) > 40:
-            display_prompt = current_prompt[:37] + "..."
-        else:
-            display_prompt = current_prompt
+        # Display current input text
+        display_text = self.nlp_input_text
+        if len(display_text) > 40:  # Truncate if too long for display
+            display_text = "..." + display_text[-37:]
+            
+        input_text_surf = self.text_font.render(display_text, True, (220, 220, 220))
+        self.screen.blit(input_text_surf, (input_box_rect.x + 5, input_box_rect.y + 8))
         
-        # Draw selection background
-        prompt_rect = pygame.Rect(prompt_x, prompt_y + 20, 310, 20)
-        pygame.draw.rect(self.screen, (50, 70, 50), prompt_rect)
-        pygame.draw.rect(self.screen, (100, 120, 100), prompt_rect, 1)  # Border
-        
-        self.screen.blit(self.text_font.render(display_prompt, True, (220, 220, 0)), 
-                        (prompt_x + 5, prompt_y + 22))
-        
-        # Draw down arrow button
-        down_arrow_rect = pygame.Rect(340, prompt_y + 20, 20, 20)
-        pygame.draw.rect(self.screen, (80, 80, 80), down_arrow_rect)
-        pygame.draw.polygon(self.screen, (200, 200, 200), 
-            [(340 + 10, prompt_y + 35), (340 + 5, prompt_y + 25), (340 + 15, prompt_y + 25)])
+        # Draw blinking cursor when active
+        if self.input_active:
+            cursor_time = pygame.time.get_ticks()
+            if cursor_time - self.cursor_blink_time > 500:  # Blink every 500ms
+                self.cursor_visible = not self.cursor_visible
+                self.cursor_blink_time = cursor_time
+                
+            if self.cursor_visible:
+                cursor_x = input_box_rect.x + 5 + self.text_font.size(display_text)[0]
+                if cursor_x < input_box_rect.right - 5:  # Make sure cursor stays in box
+                    pygame.draw.line(self.screen, (220, 220, 220), 
+                                    (cursor_x, input_box_rect.y + 6),
+                                    (cursor_x, input_box_rect.y + 24), 1)
         
         # Ask button
-        ask_button_rect = pygame.Rect(240, prompt_y + 45, 80, 30)
+        ask_button_rect = pygame.Rect(310, input_y + 20, 50, 30)
         pygame.draw.rect(self.screen, (100, 150, 100), ask_button_rect)
         self.screen.blit(self.text_font.render("Ask", True, (255, 255, 255)), 
-                         (ask_button_rect.x + 25, ask_button_rect.y + 8))
+                        (ask_button_rect.x + 15, ask_button_rect.y + 8))
         
         # Display response
-        response_y = prompt_y + 85
-        response_rect = pygame.Rect(prompt_x, response_y, 340, 80)
+        response_y = input_y + 60
+        response_rect = pygame.Rect(input_x, response_y, 340, 100)
         pygame.draw.rect(self.screen, (50, 50, 50), response_rect)
         
         # Add response header
         if self.nlp_response:
             self.screen.blit(self.font_bold.render("Answer:", True, (180, 220, 180)), 
-                            (prompt_x + 5, response_y + 5))
+                            (input_x + 5, response_y + 5))
             response_start_y = response_y + 25
         else:
-            self.screen.blit(self.font.render("Select a question and click 'Ask'", True, (180, 180, 180)), 
-                            (prompt_x + 10, response_y + 30))
+            self.screen.blit(self.font.render("Type your question and click 'Ask'", True, (180, 180, 180)), 
+                            (input_x + 10, response_y + 40))
             response_start_y = response_y + 10
         
         # Wrap text to fit in the response box
@@ -655,50 +662,43 @@ class PokerCV:
             if current_line:
                 lines.append(current_line)
             
-            # Draw response text
-            for i, line in enumerate(lines[:3]):  # Limit to 3 lines to fit better
+            # Draw response text (show more lines since we have more space now)
+            for i, line in enumerate(lines[:4]):
                 self.screen.blit(self.text_font.render(line, True, (220, 220, 220)), 
                                 (response_rect.x + 10, response_start_y + i * 20))
 
     def handle_nlp_events(self, event, y_position):
-        """Handle NLP tab interaction events"""
-        prompt_y = y_position + 50
+        """Handle NLP tab interaction events with text input"""
+        input_y = y_position + 50
+        input_box_rect = pygame.Rect(20, input_y + 20, 280, 30)
+        ask_button_rect = pygame.Rect(310, input_y + 20, 50, 30)
         
-        # Check for prompt navigation (up/down)
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP and self.selected_prompt_index > 0:
-                self.selected_prompt_index -= 1
-            elif event.key == pygame.K_DOWN and self.selected_prompt_index < len(self.available_prompts) - 1:
-                self.selected_prompt_index += 1
-        
-        # Check for mouse clicks
+        # Handle mouse clicks
         if event.type == pygame.MOUSEBUTTONDOWN:
-            # Check up arrow click
-            up_arrow_rect = pygame.Rect(340, prompt_y - 5, 20, 20)
-            if up_arrow_rect.collidepoint(event.pos) and self.selected_prompt_index > 0:
-                self.selected_prompt_index -= 1
+            # Check if input box clicked
+            if input_box_rect.collidepoint(event.pos):
+                self.input_active = True
+            else:
+                self.input_active = False
                 
-            # Check down arrow click
-            down_arrow_rect = pygame.Rect(340, prompt_y + 20, 20, 20)
-            if down_arrow_rect.collidepoint(event.pos) and self.selected_prompt_index < len(self.available_prompts) - 1:
-                self.selected_prompt_index += 1
-                
-            # Check prompt selection area click
-            prompt_rect = pygame.Rect(20, prompt_y + 20, 310, 20)
-            if prompt_rect.collidepoint(event.pos):
-                # Calculate which prompt to select based on mouse y position
-                if event.button == 4:  # Mouse wheel up
-                    if self.selected_prompt_index > 0:
-                        self.selected_prompt_index -= 1
-                elif event.button == 5:  # Mouse wheel down
-                    if self.selected_prompt_index < len(self.available_prompts) - 1:
-                        self.selected_prompt_index += 1
-            
             # Check for Ask button click
-            ask_button_rect = pygame.Rect(240, prompt_y + 45, 80, 30)
-            if ask_button_rect.collidepoint(event.pos):
-                prompt = self.available_prompts[self.selected_prompt_index]
-                self.nlp_response = self.nlp.get_response(prompt)
+            if ask_button_rect.collidepoint(event.pos) and self.nlp_input_text:
+                self.nlp_response = self.nlp.get_response(self.nlp_input_text)
+                self.nlp_input_text = ""  # Clear input after asking
+                self.input_active = False
+                
+        # Handle keyboard events
+        if event.type == pygame.KEYDOWN and self.input_active:
+            if event.key == pygame.K_RETURN:  # Submit on Enter key
+                self.nlp_response = self.nlp.get_response(self.nlp_input_text)
+                self.nlp_input_text = ""  # Clear input after asking
+                self.input_active = False
+            elif event.key == pygame.K_BACKSPACE:
+                self.nlp_input_text = self.nlp_input_text[:-1]
+            elif event.unicode and len(self.nlp_input_text) < 50:  # Limit input length
+                # Only allow printable characters
+                if event.unicode.isprintable():
+                    self.nlp_input_text += event.unicode
 
 if __name__ == "__main__":
     # Create data directories if they don't exist
