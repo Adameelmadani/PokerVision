@@ -48,7 +48,7 @@ class PokerCV:
             
         # Initialize pygame for the interface - even smaller window
         pygame.init()
-        self.screen = pygame.display.set_mode((380, 550))  # Further reduced window size
+        self.screen = pygame.display.set_mode((380, 400))  # Further reduced window size
         pygame.display.set_caption("PokerVision")
         
         # Even smaller fonts
