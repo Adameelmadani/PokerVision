@@ -38,36 +38,51 @@ class PokerCV:
         
         # Not loading empty images directly, will use model predictions
         
-# Load templates if using template matching
+        # Load templates if using template matching
         if self.recognition_method == "template":
             print("Using template matching for card recognition")
             self.rank_templates, self.suit_templates = load_card_templates()
         else:
-            print("Using neural networks for card recognition")        # Initialize pygame for the interface
+            print("Using neural networks for card recognition")
+            
+        # Initialize pygame for the interface - even smaller window
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
-        pygame.display.set_caption("PokerVision Pro")
+        self.screen = pygame.display.set_mode((380, 550))  # Further reduced window size
+        pygame.display.set_caption("PokerVision")
         
-        # Initialize fonts
-        self.font = pygame.font.SysFont("Segoe UI", 16)
-        self.font_bold = pygame.font.SysFont("Segoe UI", 16, bold=True)
-        self.title_font = pygame.font.SysFont("Segoe UI", 24, bold=True)
-        self.card_font = pygame.font.SysFont("Segoe UI", 20)
+        # Even smaller fonts
+        pygame.font.init()
+        self.title_font = pygame.font.SysFont("Arial", 20, bold=True)
+        self.header_font = pygame.font.SysFont("Arial", 16, bold=True)
+        self.font = pygame.font.SysFont("Arial", 12)
+        self.font_bold = pygame.font.SysFont("Arial", 12, bold=True)
+        self.small_font = pygame.font.SysFont("Arial", 10)
+        
+        # Color scheme
+        self.colors = {
+            'background': (30, 60, 30),  # Dark green
+            'panel': (20, 40, 20),       # Darker green
+            'highlight': (40, 80, 40),   # Lighter green
+            'text': (220, 220, 220),     # Off-white
+            'header': (255, 255, 255),   # White
+            'fold': (255, 100, 100),     # Red
+            'call': (100, 255, 100),     # Green
+            'raise': (255, 255, 100),    # Yellow
+            'spades': (50, 50, 50),      # Dark gray
+            'hearts': (200, 50, 50),     # Red
+            'diamonds': (200, 50, 50),   # Red
+            'clubs': (50, 50, 50),       # Dark gray
+        }
+        
+        # Card suit symbols
+        self.suit_symbols = {
+            'Hearts': '♥',
+            'Diamonds': '♦',
+            'Clubs': '♣',
+            'Spades': '♠'
+        }
         
         self.clock = pygame.time.Clock()
-        
-        # Define colors
-        self.colors = {
-            'bg': (27, 38, 44),         # Dark blue-gray
-            'panel': (15, 76, 117),     # Medium blue
-            'text': (238, 238, 238),    # Light gray
-            'highlight': (187, 225, 250),# Light blue
-            'raise': (255, 200, 87),    # Gold
-            'call': (111, 223, 163),    # Green
-            'fold': (255, 107, 107),    # Red
-            'header': (50, 130, 184),   # Blue
-            'border': (187, 225, 250, 50)# Semi-transparent light blue
-        }
         
     def is_position_empty(self, image, position, region_type):
         """Check if a card position is empty using the trained model"""
@@ -183,24 +198,10 @@ class PokerCV:
             else:
                 self.hand_analysis = None
                 self.strategy_advice = None
-              # Sleep to avoid high CPU usage
+            
+            # Sleep to avoid high CPU usage
             time.sleep(2)
-
-    def draw_panel(self, x, y, width, height, title=None):
-        """Draw a panel with a border and optional title"""
-        # Draw panel background
-        panel_rect = pygame.Rect(x, y, width, height)
-        pygame.draw.rect(self.screen, self.colors['panel'], panel_rect, border_radius=10)
-        pygame.draw.rect(self.screen, self.colors['border'], panel_rect, 1, border_radius=10)
         
-        # Draw title if provided
-        if title:
-            title_surf = self.title_font.render(title, True, self.colors['highlight'])
-            title_rect = title_surf.get_rect(topleft=(x + 15, y + 10))
-            self.screen.blit(title_surf, title_rect)
-            return y + 45  # Return y position after title
-        return y + 15     # Return y position if no title
-
     def run_interface(self):
         """Run the main interface loop"""
         self.start_detection()
@@ -211,265 +212,26 @@ class PokerCV:
                 if event.type == pygame.QUIT:
                     running = False
             
-            # Clear the screen
-            self.screen.fill(self.colors['bg'])
+            # Clear the screen with gradient background
+            self.screen.fill(self.colors['background'])
             
-            # Create three main panels
-            left_panel_width = 250
-            right_panel_width = 520
-            panel_margin = 15
-              # Left panel - Game Info
-            y_pos = 20
-            y_pos = self.draw_panel(panel_margin, y_pos, left_panel_width, 560, "Game Statistics")
+            # Draw header
+            self.draw_header()
             
-            # Game state with visual indicator
-            state_y = y_pos + 10
-            state_text = self.title_font.render(self.game_state, True, self.colors['highlight'])
-            state_rect = state_text.get_rect(centerx=panel_margin + left_panel_width/2, top=state_y)
+            # Draw card sections with minimal spacing
+            y_position = self.draw_player_cards(70)  # Start right after header
+            y_position = self.draw_table_cards(y_position + 10)
             
-            # State indicator circle
-            circle_color = {
-                'Pre-flop': self.colors['fold'],
-                'Flop': self.colors['raise'],
-                'Turn': self.colors['raise'],
-                'River': self.colors['call']
-            }.get(self.game_state, self.colors['text'])
-            
-            pygame.draw.circle(self.screen, circle_color, 
-                             (panel_margin + 20, state_rect.centery), 8)
-            self.screen.blit(state_text, state_rect)
-            
-            # Add session statistics
-            stats_y = state_y + 60
-            stats_data = [
-                ("Recognition", self.recognition_method.capitalize()),
-                ("Position", self.strategy_advice.get('position', 'Unknown') if self.strategy_advice else 'Unknown'),
-                ("Mode", "6-max Table"),
-                ("Status", "Active" if self.running else "Stopped")
-            ]
-            
-            for label, value in stats_data:
-                # Label in normal color
-                label_surf = self.font_bold.render(f"{label}:", True, self.colors['text'])
-                self.screen.blit(label_surf, (panel_margin + 20, stats_y))
-                
-                # Value in highlight color
-                value_surf = self.font.render(value, True, self.colors['highlight'])
-                self.screen.blit(value_surf, (panel_margin + 120, stats_y))
-                stats_y += 30
-            
-            # Right panel - Cards and Analysis
-            y_pos = 20
-            cards_panel_height = 260
-            y_pos = self.draw_panel(left_panel_width + 2*panel_margin, y_pos, 
-                                  right_panel_width, cards_panel_height, "Cards")
-              # Display cards section
-            cards_x = left_panel_width + 3*panel_margin
-            cards_y = y_pos + 10
-            
-            # Player cards
-            self.screen.blit(self.title_font.render("Your Hand", True, self.colors['text']), 
-                           (cards_x, cards_y))
-            
-            if not self.player_cards:
-                self.screen.blit(self.font.render("Waiting for cards...", True, self.colors['text']), 
-                               (cards_x, cards_y + 35))
-            else:
-                for i, card in enumerate(self.player_cards):
-                    card_rect = pygame.Rect(cards_x + i*120, cards_y + 35, 100, 140)
-                    pygame.draw.rect(self.screen, self.colors['highlight'], card_rect, border_radius=5)
-                    
-                    if card.get('empty', False):
-                        pygame.draw.rect(self.screen, self.colors['panel'], card_rect, 2, border_radius=5)
-                        empty_text = self.card_font.render("?", True, self.colors['text'])
-                        text_rect = empty_text.get_rect(center=card_rect.center)
-                        self.screen.blit(empty_text, text_rect)
-                    else:
-                        # Draw card
-                        pygame.draw.rect(self.screen, (255, 255, 255), card_rect, border_radius=5)
-                        
-                        # Card value
-                        value_text = self.card_font.render(card['rank'], True, (0, 0, 0))
-                        self.screen.blit(value_text, (card_rect.x + 10, card_rect.y + 10))
-                        
-                        # Suit (with color)
-                        suit_color = (255, 0, 0) if card['suit'] in ['Hearts', 'Diamonds'] else (0, 0, 0)
-                        suit_text = self.card_font.render(card['suit'][0], True, suit_color)
-                        self.screen.blit(suit_text, (card_rect.x + 10, card_rect.y + 35))                # Table cards
-            table_y = cards_y + 190
-            self.screen.blit(self.title_font.render("Community Cards", True, self.colors['text']), 
-                           (cards_x, table_y))
-            
-            if not self.table_cards:
-                self.screen.blit(self.font.render("Waiting for community cards...", True, self.colors['text']), 
-                               (cards_x, table_y + 35))
-            else:
-                for i, card in enumerate(self.table_cards):
-                    card_rect = pygame.Rect(cards_x + i*100, table_y + 35, 80, 112)
-                    pygame.draw.rect(self.screen, self.colors['highlight'], card_rect, border_radius=5)
-                    
-                    # Strategy Analysis Panel
-                    strategy_y = cards_y + cards_panel_height + panel_margin
-                    strategy_height = 280
-                    y_pos = self.draw_panel(left_panel_width + 2*panel_margin, strategy_y, 
-                                          right_panel_width, strategy_height, "Strategy Analysis")
-                    
-                    content_x = left_panel_width + 3*panel_margin
-                    content_y = strategy_y + 50
-                    
-                    if self.hand_analysis:
-                        # Hand information with progress bar for win probability
-                        hand_text = f"{self.hand_analysis['hand_name']}"
-                        self.screen.blit(self.title_font.render(hand_text, True, self.colors['highlight']), 
-                                       (content_x, content_y))
-                        
-                        # Win probability bar
-                        prob = self.hand_analysis['win_probability']
-                        bar_width = 400
-                        bar_height = 25
-                        bar_x = content_x
-                        bar_y = content_y + 40
-                        
-                        # Background bar
-                        pygame.draw.rect(self.screen, self.colors['panel'], 
-                                       (bar_x, bar_y, bar_width, bar_height), border_radius=5)
-                        
-                        # Progress bar
-                        prob_width = int((prob / 100) * bar_width)
-                        prob_color = (111, 223, 163) if prob > 60 else \
-                                   (255, 200, 87) if prob > 30 else \
-                                   (255, 107, 107)
-                        pygame.draw.rect(self.screen, prob_color,
-                                       (bar_x, bar_y, prob_width, bar_height), border_radius=5)
-                        
-                        # Win probability text
-                        prob_text = f"{prob:.1f}% Win Rate"
-                        prob_surf = self.font_bold.render(prob_text, True, self.colors['text'])
-                        prob_rect = prob_surf.get_rect(center=(bar_x + bar_width/2, bar_y + bar_height/2))
-                        self.screen.blit(prob_surf, prob_rect)
-                        
-                        if self.strategy_advice:
-                            advice_y = content_y + 90
-                            
-                            # Position indicator
-                            position = self.strategy_advice.get('position', 'Unknown')
-                            pos_color = self.colors['call'] if self.strategy_advice['position_strength'] > 0.6 else self.colors['text']
-                            position_text = f"Position: {position}"
-                            self.screen.blit(self.font_bold.render(position_text, True, pos_color), 
-                                           (content_x, advice_y))
-                            
-                            # Action recommendation
-                            action = self.strategy_advice['action']
-                            action_color = self.colors['raise'] if 'Raise' in action else \
-                                         self.colors['call'] if 'Call' in action else \
-                                         self.colors['fold'] if 'Fold' in action else \
-                                         self.colors['text']
-                            
-                            action_y = advice_y + 30
-                            action_rect = pygame.Rect(content_x, action_y, 480, 40)
-                            pygame.draw.rect(self.screen, action_color, action_rect, border_radius=5)
-                            
-                            action_text = self.title_font.render(action, True, self.colors['bg'])
-                            text_rect = action_text.get_rect(center=action_rect.center)
-                            self.screen.blit(action_text, text_rect)
-                            
-                            # Reasoning text with word wrap
-                            reasoning_y = action_y + 60
-                            reasoning = self.strategy_advice['reasoning']
-                            self.screen.blit(self.font_bold.render("Reasoning:", True, self.colors['text']), 
-                                           (content_x, reasoning_y))
-                            
-                            # Word wrap the reasoning text
-                            y_offset = 25
-                            words = reasoning.split()
-                            line = ""
-                            for word in words:
-                                test_line = line + word + " "
-                                if self.font.size(test_line)[0] < 460:  # Leave margin
-                                    line = test_line
-                                else:
-                                    self.screen.blit(self.font.render(line, True, self.colors['text']), 
-                                                   (content_x + 10, reasoning_y + y_offset))
-                                    y_offset += 20
-                                    line = word + " "
-                            if line:
-                                self.screen.blit(self.font.render(line, True, self.colors['text']), 
-                                               (content_x + 10, reasoning_y + y_offset))
-                    else:
-                        self.screen.blit(self.font.render("Waiting for hand analysis...", True, self.colors['text']), 
-                                       (content_x, content_y))
-                    
-                    if card.get('empty', False):
-                        pygame.draw.rect(self.screen, self.colors['panel'], card_rect, 2, border_radius=5)
-                        empty_text = self.card_font.render("?", True, self.colors['text'])
-                        text_rect = empty_text.get_rect(center=card_rect.center)
-                        self.screen.blit(empty_text, text_rect)
-                    else:
-                        # Draw card
-                        pygame.draw.rect(self.screen, (255, 255, 255), card_rect, border_radius=5)
-                        
-                        # Card value                        value_text = self.card_font.render(card['rank'], True, (0, 0, 0))
-                        self.screen.blit(value_text, (card_rect.x + 8, card_rect.y + 8))
-                        
-                        # Suit (with color)
-                        suit_color = (255, 0, 0) if card['suit'] in ['Hearts', 'Diamonds'] else (0, 0, 0)
-                        suit_text = self.card_font.render(card['suit'][0], True, suit_color)
-                        self.screen.blit(suit_text, (card_rect.x + 8, card_rect.y + 28))
-              
-            # Start hand analysis section below the cards panel
-            y_position = 300  # Fixed position for hand analysis
-            
-            # Display hand analysis
-            self.screen.blit(self.font.render("Hand Analysis:", True, (255, 255, 255)), (20, y_position))
-            y_position += 30
-            
+            # Draw analysis sections
             if self.hand_analysis:
-                self.screen.blit(self.font.render(f"Hand: {self.hand_analysis['hand_name']}", True, (255, 255, 255)), (20, y_position))
-                y_position += 25
-                self.screen.blit(self.font.render(f"Win Probability: {self.hand_analysis['win_probability']:.2f}%", True, (255, 255, 255)), (20, y_position))
-                  # Display strategy advice
-                if self.strategy_advice:
-                    y_position += 40
-                    self.screen.blit(self.font_bold.render("Strategy Advice:", True, (255, 255, 255)), (20, y_position))
-                    y_position += 30
-                    
-                    # Show position and strength indicators
-                    position_color = (100, 255, 100) if self.strategy_advice['position_strength'] > 0.6 else (255, 255, 255)
-                    self.screen.blit(self.font.render(f"Position: {self.strategy_advice.get('position', 'Unknown')}", True, position_color), (20, y_position))
-                    y_position += 25
-                    
-                    # Color-code the action based on aggressiveness
-                    action = self.strategy_advice['action']
-                    action_color = (255, 255, 100) if 'Raise' in action else \
-                                 (100, 255, 100) if 'Call' in action else \
-                                 (255, 100, 100) if 'Fold' in action else \
-                                 (255, 255, 255)
-                    
-                    self.screen.blit(self.font_bold.render(f"Recommended Action:", True, (255, 255, 255)), (20, y_position))
-                    y_position += 25
-                    self.screen.blit(self.font.render(action, True, action_color), (40, y_position))
-                    y_position += 25
-                    
-                    # Show reasoning with word wrap
-                    reasoning = self.strategy_advice['reasoning']
-                    self.screen.blit(self.font_bold.render("Reasoning:", True, (255, 255, 255)), (20, y_position))
-                    y_position += 25
-                    
-                    # Word wrap the reasoning text
-                    words = reasoning.split()
-                    line = ""
-                    for word in words:
-                        test_line = line + word + " "
-                        if self.font.size(test_line)[0] < self.screen.get_width() - 40:
-                            line = test_line
-                        else:
-                            self.screen.blit(self.font.render(line, True, (255, 255, 255)), (40, y_position))
-                            y_position += 20
-                            line = word + " "
-                    if line:
-                        self.screen.blit(self.font.render(line, True, (255, 255, 255)), (40, y_position))
+                y_position = self.draw_hand_analysis(y_position + 10)
             else:
-                self.screen.blit(self.font.render("No valid hand detected", True, (255, 255, 255)), (20, y_position))
+                self.draw_panel("Hand Analysis", "No valid hand detected", y_position + 10, height=60)
+                y_position += 70
+            
+            # Draw strategy advice
+            if self.strategy_advice:
+                self.draw_strategy_advice(y_position + 10)
             
             # Update the display
             pygame.display.flip()
@@ -477,6 +239,257 @@ class PokerCV:
         
         self.running = False
         pygame.quit()
+    
+    def draw_header(self):
+        """Draw the header section"""
+        # Title bar - smaller height
+        pygame.draw.rect(self.screen, (20, 40, 20), (0, 0, self.screen.get_width(), 55))
+        pygame.draw.line(self.screen, self.colors['highlight'], (0, 55), (self.screen.get_width(), 55), 1)
+        
+        # App title
+        title_surf = self.title_font.render("PokerVision", True, self.colors['header'])
+        self.screen.blit(title_surf, (10, 8))
+        
+        # Game state display
+        state_text = f"State: {self.game_state}"
+        state_color = (255, 255, 100) if self.game_state != "Pre-flop" else self.colors['text']
+        state_surf = self.font.render(state_text, True, state_color)
+        self.screen.blit(state_surf, (10, 32))
+        
+        # Detection method badge
+        method_text = f"{self.recognition_method.upper()}"
+        method_surf = self.small_font.render(method_text, True, self.colors['text'])
+        method_rect = method_surf.get_rect()
+        method_rect.topright = (self.screen.get_width() - 15, 12)
+        pygame.draw.rect(self.screen, (60, 100, 60), 
+                        (method_rect.left - 6, method_rect.top - 3, 
+                        method_rect.width + 12, method_rect.height + 6), 
+                        border_radius=6)
+        self.screen.blit(method_surf, method_rect)
+    
+    def draw_panel(self, title, subtitle=None, y_position=0, height=None):
+        """Draw a panel with title and optional subtitle"""
+        padding = 10
+        width = self.screen.get_width() - 20
+        
+        if height is None:
+            height = 65 if subtitle else 40
+        
+        # Panel background
+        pygame.draw.rect(self.screen, self.colors['panel'], 
+                        (10, y_position, width, height),
+                        border_radius=6)
+        
+        # Panel highlight
+        pygame.draw.rect(self.screen, self.colors['highlight'], 
+                        (10, y_position, width, height),
+                        width=1, border_radius=6)
+        
+        # Panel title
+        title_surf = self.header_font.render(title, True, self.colors['header'])
+        self.screen.blit(title_surf, (padding + 5, y_position + 8))
+        
+        # Optional subtitle
+        if subtitle:
+            subtitle_surf = self.font.render(subtitle, True, self.colors['text'])
+            self.screen.blit(subtitle_surf, (padding + 10, y_position + 35))
+            
+        return y_position + height
+    
+    def draw_card(self, rank, suit, x, y, width=40, height=60):
+        """Draw an even smaller card"""
+        # Card background
+        pygame.draw.rect(self.screen, (240, 240, 240), 
+                        (x, y, width, height),
+                        border_radius=3)
+        
+        # Card border
+        pygame.draw.rect(self.screen, (180, 180, 180), 
+                        (x, y, width, height),
+                        width=1, border_radius=3)
+        
+        if rank == "Empty":
+            # Draw an empty card placeholder
+            pygame.draw.line(self.screen, (200, 200, 200), 
+                            (x+6, y+6), (x+width-6, y+height-6), 1)
+            pygame.draw.line(self.screen, (200, 200, 200), 
+                            (x+width-6, y+6), (x+6, y+height-6), 1)
+            return
+            
+        # Determine card color based on suit
+        if suit in ['Hearts', 'Diamonds']:
+            card_color = (200, 0, 0)
+        else:
+            card_color = (0, 0, 0)
+            
+        # Draw rank in corner
+        rank_surf = self.small_font.render(rank, True, card_color)
+        self.screen.blit(rank_surf, (x + 3, y + 3))
+        
+        # Draw suit symbols
+        suit_symbol = self.suit_symbols.get(suit, '?')
+        
+        # Small suit in corner
+        small_suit = self.small_font.render(suit_symbol, True, card_color)
+        self.screen.blit(small_suit, (x + width - 14, y + 3))
+        
+        # Center suit
+        large_suit = pygame.font.SysFont("Arial", 24).render(suit_symbol, True, card_color)
+        large_suit_rect = large_suit.get_rect(center=(x + width//2, y + height//2))
+        self.screen.blit(large_suit, large_suit_rect)
+    
+    def draw_player_cards(self, y_position):
+        """Draw player cards section"""
+        panel_height = 100
+        y = self.draw_panel("Player Cards", None, y_position, panel_height)
+        
+        if not self.player_cards:
+            text = self.font.render("No player cards", True, self.colors['text'])
+            self.screen.blit(text, (20, y_position + 40))
+        else:
+            start_x = (self.screen.get_width() - (len(self.player_cards) * 50)) // 2
+            for i, card in enumerate(self.player_cards):
+                rank = card.get('rank', 'Empty')
+                suit = card.get('suit', 'Empty')
+                self.draw_card(rank, suit, start_x + i * 50, y_position + 30)
+        
+        return y
+    
+    def draw_table_cards(self, y_position):
+        """Draw table cards section"""
+        panel_height = 100
+        y = self.draw_panel("Table Cards", None, y_position, panel_height)
+        
+        if not self.table_cards:
+            text = self.font.render("No table cards", True, self.colors['text'])
+            self.screen.blit(text, (20, y_position + 40))
+        else:
+            start_x = (self.screen.get_width() - (len(self.table_cards) * 45)) // 2
+            for i, card in enumerate(self.table_cards):
+                rank = card.get('rank', 'Empty')
+                suit = card.get('suit', 'Empty')
+                self.draw_card(rank, suit, start_x + i * 45, y_position + 30)
+        
+        return y
+    
+    def draw_hand_analysis(self, y_position):
+        """Draw hand analysis section"""
+        panel_height = 85
+        
+        hand_name = self.hand_analysis['hand_name']
+        win_prob = self.hand_analysis['win_probability']
+        text = f"{hand_name} | Win: {win_prob:.1f}%"
+        
+        y = self.draw_panel("Hand Analysis", text, y_position, panel_height)
+        
+        # Draw win probability bar
+        bar_width = self.screen.get_width() - 70
+        bar_height = 10
+        bar_x = 35
+        bar_y = y_position + 60
+        
+        # Background bar
+        pygame.draw.rect(self.screen, (60, 60, 60), 
+                        (bar_x, bar_y, bar_width, bar_height))
+        
+        # Progress bar
+        win_prob = self.hand_analysis['win_probability'] / 100
+        prob_width = int(win_prob * bar_width)
+        
+        # Color based on win probability
+        if win_prob < 0.3:
+            bar_color = (200, 50, 50)  # Red
+        elif win_prob < 0.6:
+            bar_color = (200, 200, 50)  # Yellow
+        else:
+            bar_color = (50, 200, 50)  # Green
+            
+        pygame.draw.rect(self.screen, bar_color, 
+                        (bar_x, bar_y, prob_width, bar_height))
+        
+        # Border
+        pygame.draw.rect(self.screen, (200, 200, 200), 
+                        (bar_x, bar_y, bar_width, bar_height), 1)
+                
+        return y
+    
+    def draw_strategy_advice(self, y_position):
+        """Draw strategy advice section"""
+        # Calculate content
+        advice_text = self.strategy_advice['action']
+        reasoning = self.strategy_advice['reasoning']
+        position = self.strategy_advice.get('position', 'Unknown')
+        
+        # Make reasoning more concise to fit smaller window
+        if len(reasoning) > 150:
+            reasoning = reasoning[:147] + "..."
+            
+        # Calculate how many lines the reasoning will take
+        line_height = 15
+        max_width = self.screen.get_width() - 50
+        words = reasoning.split()
+        lines = 1
+        line = ""
+        
+        for word in words:
+            test_line = line + word + " "
+            if self.font.size(test_line)[0] < max_width:
+                line = test_line
+            else:
+                lines += 1
+                line = word + " "
+                
+        panel_height = 85 + (lines * line_height)
+        y = self.draw_panel("Strategy Advice", None, y_position, panel_height)
+        
+        # Position indicator with action on same line to save space
+        position_strength = self.strategy_advice['position_strength']
+        position_color = (100, 255, 100) if position_strength > 0.6 else self.colors['text']
+        pos_text = self.font_bold.render(f"Pos: {position}", True, position_color)
+        self.screen.blit(pos_text, (20, y_position + 35))
+        
+        # Action recommendation
+        action = self.strategy_advice['action']
+        if 'Raise' in action:
+            action_color = self.colors['raise']
+        elif 'Call' in action:
+            action_color = self.colors['call']
+        elif 'Fold' in action:
+            action_color = self.colors['fold']
+        else:
+            action_color = self.colors['text']
+            
+        action_text = self.font_bold.render(action, True, action_color)
+        action_rect = action_text.get_rect()
+        action_rect.right = self.screen.get_width() - 20
+        action_rect.top = y_position + 35
+        self.screen.blit(action_text, action_rect)
+        
+        # Reasoning with word wrap
+        y_text = y_position + 60
+        x_text = 20
+        
+        self.screen.blit(self.font_bold.render("Reasoning:", True, self.colors['text']), 
+                        (x_text, y_text))
+        y_text += line_height
+        
+        # Word wrap
+        line = ""
+        for word in words:
+            test_line = line + word + " "
+            if self.font.size(test_line)[0] < max_width:
+                line = test_line
+            else:
+                self.screen.blit(self.font.render(line, True, self.colors['text']), 
+                                (x_text + 5, y_text))
+                y_text += line_height
+                line = word + " "
+                
+        if line:
+            self.screen.blit(self.font.render(line, True, self.colors['text']), 
+                            (x_text + 5, y_text))
+        
+        return y
 
 if __name__ == "__main__":
     # Create data directories if they don't exist
