@@ -587,11 +587,11 @@ class PokerCV:
     def draw_nlp_tab(self, y_position):
         """Draw the NLP assistant tab with text input"""
         # Draw NLP panel
-        panel_height = 200
+        panel_height = 230
         self.draw_panel("NLP Assistant", "Ask a question about poker or your current hand", y_position, panel_height)
         
         # Display text input field
-        input_y = y_position + 50
+        input_y = y_position + 55
         input_x = 20
         
         # Draw input field label
@@ -644,7 +644,7 @@ class PokerCV:
             response_start_y = response_y + 25
         else:
             self.screen.blit(self.font.render("Type your question and click 'Ask'", True, (180, 180, 180)), 
-                            (input_x + 10, response_y + 40))
+                            (input_x + 10, response_y + 10))
             response_start_y = response_y + 10
         
         # Wrap text to fit in the response box
