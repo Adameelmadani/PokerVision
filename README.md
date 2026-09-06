@@ -2,6 +2,8 @@
 
 An intelligent poker assistant that uses computer vision and machine learning to recognize cards, analyze hands, and provide strategic advice in real-time for PokerStars Texas Hold'em games.
 
+<img src="demo/demo.gif">
+
 ## Overview
 
 PokerVision combines advanced computer vision techniques with artificial intelligence to create a comprehensive poker strategy assistant. The system automatically captures and analyzes the game state from your screen, identifies cards using either neural networks or template matching, calculates win probabilities through Monte Carlo simulation, and provides strategic recommendations. It also features an interactive NLP assistant that answers poker-related questions based on the current game context.
@@ -183,3 +185,7 @@ To adapt the system to your PokerStars client:
 - **Application runs slowly?**
   - Adjust the detection frequency in `main.py`
   - Reduce the screen capture resolution
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
